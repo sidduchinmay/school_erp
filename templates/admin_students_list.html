@@ -1,0 +1,12 @@
+{% for student in students %}
+<tr>
+    <td>{{ student.student_id }}</td>
+    <td>{{ student.name }}</td>
+    <td>{{ student.class_name }}-{{ student.division }}</td>
+    <td>
+        <a href="{{ url_for('admin_student_edit', student_id=student.id) }}" class="btn btn-sm btn-primary">
+            Manage/Edit
+        </a>
+    </td>
+</tr>
+{% endfor %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <!-- Top Row: Upload/Download Headers from PDF -->
+  <div class="row mb-2">
+    <div class="col"><small><b>Profile of the teacher</b><br>Download</small></div>
+    <div class="col"><small><b>Resume</b><br>Upload / Download</small></div>
+    <div class="col"><small><b>Portfolio Year - wise</b><br>Display / Upload / Download</small></div>
+    <div class="col"><small><b>Home Work & Flipping (Topics)</b><br>Display</small></div>
+    <div class="col"><small><b>Lesson Plan</b><br>Upload / Download<br>(No deletion)</small></div>
+    <div class="col"><small><b>Monthly Plan</b><br>Upload / Download<br>(No deletion)</small></div>
+    <div class="col"><small><b>Year Plan</b><br>Upload / Download<br>(No deletion)</small></div>
+    <div class="col"><small><b>Gradation</b><br>Upload / Download<br>(No deletion)</small></div>
+    <div class="col"><small><b>PTM</b><br>1. Schedule, Plan<br>2. Report<br>3. Others</small></div>
+    <div class="col"><small><b>Applications</b><br>Leaves<br>Others</small></div>
+  </div>
+
+  <div class="row">
+    <!-- Left Column: Photo + Profile -->
+    <div class="col-md-2">
+      <div class="card mb-2">
+        <div class="card-header p-1 text-center"><b>Photo</b></div>
+        <img src="{{profile.photo_url or 'https://via.placeholder.com/150'}}" class="card-img-top">
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Full Name of the Teacher</b></div>
+        <div class="card-body p-2"><small>{{profile.full_name or teacher.name}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Current Address</b></div>
+        <div class="card-body p-2"><small>{{profile.current_address or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Permanent Address</b></div>
+        <div class="card-body p-2"><small>{{profile.permanent_address or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Aadhar Card</b></div>
+        <div class="card-body p-2"><small>{{profile.aadhar_card or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Husband / Father's Name</b></div>
+        <div class="card-body p-2"><small>{{profile.husband_father_name or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>CBSE No</b></div>
+        <div class="card-body p-2"><small>{{profile.cbse_no or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Phone Number</b></div>
+        <div class="card-body p-2"><small>{{profile.phone_number or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Emergency Phone Number 1</b></div>
+        <div class="card-body p-2"><small>{{profile.emergency_phone_1 or '-'}}</small></div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header p-1"><b>Emergency Phone Number 2</b></div>
+        <div class="card-body p-2"><small>{{profile.emergency_phone_2 or '-'}}</small></div>
+      </div>
+      <div class="card">
+        <div class="card-header p-1"><b>Commendations Display</b></div>
+        <div class="card-body p-2"><small>-</small></div>
+      </div>
+    </div>
+
+    <!-- Middle Column: Daily Updates + Enhancing/Curricular Performance -->
+    <div class="col-md-3">
+      <div class="card mb-2">
+        <div class="card-header p-1 bg-warning"><b>Daily Updates</b></div>
+        <div class="card-body p-1">
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Day</th><th>Updates</th></tr>
+            <tr><td>Student attendance</td><td><button class="btn btn-xs btn-primary">Update</button></td></tr>
+            <tr><td>Exam Registration</td><td></td></tr>
+            <tr><td>Progress Report</td><td></td></tr>
+            <tr><td>Sports Registration</td><td></td></tr>
+            <tr><td>Talent Hunt Registration</td><td></td></tr>
+            <tr><td>Club Registration</td><td></td></tr>
+            <tr><td>Spelling Bee Registration</td><td></td></tr>
+            <tr><td>Exhibition Reg.</td><td></td></tr>
+            <tr><td>Quiz/Pratibha Karyakram</td><td></td></tr>
+            <tr><td>Intra/Inter</td><td></td></tr>
+            <tr><td>State</td><td></td></tr>
+            <tr><td>National</td><td></td></tr>
+            <tr><td>International</td><td></td></tr>
+          </table>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header p-1 bg-warning"><b>Enhancing/Curricular Performance</b></div>
+        <div class="card-body p-1">
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Items</th><th>Updates</th></tr>
+            <tr><td>Leaves & Compliance</td><td></td></tr>
+            <tr><td>Exam Duties</td><td></td></tr>
+            <tr><td>Late coming</td><td></td></tr>
+            <tr><td>Workshops Attended</td><td></td></tr>
+            <tr><td>Paper Sets Submitted</td><td></td></tr>
+            <tr><td>Communications</td><td></td></tr>
+            <tr><td>Participations</td><td></td></tr>
+            <tr><td>Interventions</td><td></td></tr>
+            <tr><td>Trainers</td><td></td></tr>
+            <tr><td>Mentoring</td><td></td></tr>
+            <tr><td>Feedback Received</td><td></td></tr>
+            <tr><td>Admin Record</td><td></td></tr>
+            <tr><td>Issued by office</td><td></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Portfolio + Lesson Plans + Exam Schedule -->
+    <div class="col-md-7">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-2">
+            <div class="card-header p-1 bg-warning"><b>Portfolio</b></div>
+            <div class="card-body p-2">
+              <small>
+                <b>English Lang. Teacher</b><br>
+                <b>Head of Dept of English</b><br>
+                <b>House Master - Prithiba Sadan</b><br>
+                <b>Allocation</b><br>
+                VIII - K, IX - B, C & T
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card mb-2">
+            <div class="card-header p-1 bg-warning"><b>Click to Update daily / Time to time</b></div>
+            <div class="card-body p-1">
+              <table class="table table-sm table-bordered mb-0">
+                <tr><th>VIII - A</th><th>IX - B</th><th>IX - C</th><th>X - T</th></tr>
+                <tr><td>HW<br>Awt<br>Project</td><td>HW<br>Awt<br>Project</td><td>HW<br>Awt<br>Project</td><td>HW<br>Awt<br>Project</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-header p-1 bg-warning"><b>Daily Updates</b></div>
+        <div class="card-body p-2">
+          <small>1. Teachers Circular<br>2. Teacher Circulars<br>3. Incoming Activities<br>4. Others</small>
+        </div>
+      </div>
+
+      <!-- Lesson Plans 2026-27 Grid -->
+      <div class="card mb-2">
+        <div class="card-header p-1 bg-warning text-center"><b>Lesson Plans 2026-27</b></div>
+        <div class="card-body p-1">
+          <table class="table table-sm table-bordered mb-0" style="font-size:10px">
+            <tr><th>Month</th>{% for i in range(1,32) %}<th>{{i}}</th>{% endfor %}</tr>
+            {% for month in ['March','April','May','June','July','August','September','October','November','December','January','February'] %}
+            <tr><td>{{month}}</td>{% for i in range(1,32) %}<td></td>{% endfor %}</tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Exam Schedule -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header p-1 bg-warning"><b>Exam Schedule</b></div>
+            <div class="card-body p-1">
+              <table class="table table-sm table-bordered mb-0">
+                <tr><th>Test/Exams</th><th>Completion</th><th>Dates</th></tr>
+                <tr><td>Admission Test</td><td></td><td></td></tr>
+                <tr><td>Diagnostic Test</td><td></td></tr>
+                <tr><td>MT-1</td><td></td><td></td></tr>
+                <tr><td>MT-2</td><td></td><td></td></tr>
+                <tr><td>MT-3</td><td></td></tr>
+                <tr><td>MT-4</td><td></td><td></td></tr>
+                <tr><td>MT-5</td><td></td><td></td></tr>
+                <tr><td>MT-6</td><td></td><td></td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Activity Schedule -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header p-1 bg-warning"><b>Activity Schedule</b></div>
+            <div class="card-body p-1">
+              <table class="table table-sm table-bordered mb-0">
+                <tr><th>Test / Exams</th><th>Completion</th><th>Dates</th></tr>
+                <tr><td>MT-6</td><td></td><td>Trial -1</td></tr>
+                <tr><td>Term -1</td><td></td><td>Trial -2</td></tr>
+                <tr><td>Annual Exam</td><td></td><td>Trial -3</td></tr>
+                <tr><td></td><td></td><td>Trial -4</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-3">
+        <a href="{{url_for('mark_attendance')}}" class="btn btn-primary btn-sm">Mark Attendance</a>
+        <a href="{{url_for('enter_marks')}}" class="btn btn-success btn-sm">Enter MT-1 to MT-6 Marks</a>
+        <button class="btn btn-info btn-sm">Upload Lesson Plan</button>
+        <button class="btn btn-warning btn-sm">PTM Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

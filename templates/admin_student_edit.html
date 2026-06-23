@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Edit Student: {{ student.name }} - {{ student.student_id }}</h3>
+<form method="post">
+    <h5>Profile</h5>
+    <div class="row">
+        <div class="col"><input name="name" value="{{ student.name }}" class="form-control" placeholder="Name"></div>
+        <div class="col"><input name="class_name" value="{{ student.class_name }}" class="form-control" placeholder="Class"></div>
+        <div class="col"><input name="division" value="{{ student.division }}" class="form-control" placeholder="Division"></div>
+    </div>
+    <div class="row mt-2">
+        <div class="col"><input name="father_mobile" value="{{ student.father_mobile }}" class="form-control" placeholder="Father Mobile"></div>
+        <div class="col"><input name="mother_mobile" value="{{ student.mother_mobile }}" class="form-control" placeholder="Mother Mobile"></div>
+        <div class="col"><input name="emergency_number" value="{{ student.emergency_number }}" class="form-control" placeholder="Emergency No"></div>
+    </div>
+
+    <h5 class="mt-4">Accolades/Certificate</h5>
+    <textarea name="accolades_school_level" class="form-control" placeholder="School Level">{{ student.accolades_school_level or '' }}</textarea>
+    <textarea name="accolades_inter_school" class="form-control mt-1" placeholder="Inter-school">{{ student.accolades_inter_school or '' }}</textarea>
+    <textarea name="accolades_state" class="form-control mt-1" placeholder="State">{{ student.accolades_state or '' }}</textarea>
+
+    <h5 class="mt-4">Applications</h5>
+    Gavel Club: <select name="application_gavel_club" class="form-select d-inline w-auto"><option {% if student.application_gavel_club=='Yes' %}selected{% endif %}>Yes</option><option {% if student.application_gavel_club=='No' %}selected{% endif %}>No</option></select>
+    Talent Hunt: <select name="application_talent_hunt" class="form-select d-inline w-auto"><option {% if student.application_talent_hunt=='Yes' %}selected{% endif %}>Yes</option><option {% if student.application_talent_hunt=='No' %}selected{% endif %}>No</option></select>
+    Sports/Yoga: <select name="application_sports_yoga" class="form-select d-inline w-auto"><option {% if student.application_sports_yoga=='Yes' %}selected{% endif %}>Yes</option><option {% if student.application_sports_yoga=='No' %}selected{% endif %}>No</option></select>
+
+    <h5 class="mt-4">Discipline</h5>
+    <textarea name="discipline_white_report" class="form-control" placeholder="White Report Card">{{ student.discipline_white_report or '' }}</textarea>
+    <textarea name="discipline_yellow_report" class="form-control mt-1" placeholder="Yellow Report Card">{{ student.discipline_yellow_report or '' }}</textarea>
+    <textarea name="discipline_red_report" class="form-control mt-1" placeholder="Red Report Card">{{ student.discipline_red_report or '' }}</textarea>
+    <textarea name="parents_meetings" class="form-control mt-1" placeholder="Parent's Meetings">{{ student.parents_meetings or '' }}</textarea>
+    <textarea name="counselling_attended" class="form-control mt-1" placeholder="Counselling Attended">{{ student.counselling_attended or '' }}</textarea>
+
+    <button class="btn btn-primary mt-3">Save All</button>
+</form>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>{{ student.name }} - {{ student.student_id }}</h3>
+<p><b>Class:</b> {{ student.class_name }}-{{ student.division }} | <b>Father:</b> {{ student.father_mobile }}</p>
+
+<h5>Attendance</h5>
+<table class="table table-sm">
+{% for a in attendance %}
+<tr><td>{{ a.date }}</td><td>{{ a.status }}</td></tr>
+{% endfor %}
+</table>
+
+<h5>Exam Marks</h5>
+<table class="table table-sm">
+{% for e in exams %}
+<tr><td>{{ e.exam_type }}</td><td>{{ e.subject }}</td><td>{{ e.marks_obtained }}/{{ e.max_marks }}</td></tr>
+{% endfor %}
+</table>
+<a href="{{ url_for('admin_students_list') }}" class="btn btn-secondary">Back</a>
+{% endblock %}

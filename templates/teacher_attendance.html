@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>Mark Attendance</h4>
+<form method="GET" class="mb-3">
+  <input type="date" name="date" value="{{selected_date}}" class="form-control" onchange="this.form.submit()">
+</form>
+<form method="POST">
+  <input type="hidden" name="date" value="{{selected_date}}">
+  <select name="attendance_type" class="form-select mb-2">
+    <option>Month-wise</option>
+    <option>Mandatory Activity</option>
+  </select>
+  <table class="table table-sm">
+    <tr><th>Roll</th><th>Name</th><th>Status</th></tr>
+    {% for s in students %}
+    <tr>
+      <td>{{s.roll_no}}</td>
+      <td>{{s.name}}</td>
+      <td>
+        <select name="student_{{s.id}}" class="form-select form-select-sm">
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <button class="btn btn-success">Save & Send SMS to Absentees</button>
+</form>
+{% endblock %}

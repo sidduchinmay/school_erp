@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* Alloy Green = #8F9779, Golden Yellow = #FFD700 */
+body {
+    background-color: #F5F5DC; /* Beige - easy on eyes, feasible background */
+}
+
+.student-container {
+    background: #FFFFFF;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h2, h3 {
+    color: #8F9779; /* Alloy Green for headings */
+    border-bottom: 2px solid #FFD700; /* Golden Yellow underline */
+    padding-bottom: 5px;
+}
+
+.profile-table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin-bottom: 20px; 
+    background: #FFFFFF;
+}
+
+.profile-table td, .profile-table th { 
+    border: 1px solid #8F9779; /* Alloy Green borders */
+    padding: 8px; 
+    font-size: 12px; 
+    color: #2F4F4F; /* Dark Slate Gray for readability */
+}
+
+.profile-table th {
+    background-color: #8F9779; /* Alloy Green header */
+    color: #FFD700; /* Golden Yellow text */
+    font-weight: bold;
+    text-align: center;
+}
+
+.profile-box { 
+    border: 2px solid #8F9779; 
+    padding: 10px; 
+    background: #FAFAD2; /* Light Goldenrod - subtle yellow tint */
+}
+
+.profile-box b {
+    color: #8F9779; /* Alloy Green for labels */
+}
+
+.balance-due {
+    color: #B8860B !important; /* Dark Goldenrod for due amounts */
+    font-weight: bold;
+}
+
+.paid-amount {
+    color: #8F9779 !important; /* Alloy Green for paid */
+    font-weight: bold;
+}
+
+.report-card {
+    color: #DAA520; /* Goldenrod for report labels */
+    font-weight: bold;
+}
+</style>
+
+<div class="student-container">
+<h2>Student Profile Interface</h2>
+
+<table class="profile-table">
+    <tr>
+        <td rowspan="2" style="width:15%; text-align:center;" class="profile-box">
+            <b>Photo</b><br>
+            {% if current_user.student.photo %}
+                <img src="{{ url_for('static', filename='uploads/' + current_user.student.photo) }}" width="100" style="border: 2px solid #FFD700;">
+            {% endif %}
+        </td>
+        <td style="width:35%;" class="profile-box">
+            <b>Profile</b><br>
+            Name: {{ current_user.student.name }}<br>
+            Class & Division: {{ current_user.student.course }} - {{ current_user.student.section }}<br>
+            Day Scholar/Hostel: {{ current_user.student.hostel_status or 'N/A' }}<br>
+            Father's Mobile: {{ current_user.student.father_mobile or 'N/A' }}<br>
+            Mother's Mobile: {{ current_user.student.mother_mobile or 'N/A' }}
+        </td>
+        <td style="width:50%;" class="profile-box">
+            <b>Attendance Graph</b><br>
+            <canvas id="attendanceChart" height="100"></canvas>
+        </td>
+    </tr>
+</table>
+
+<!-- Attendance Month-wise -->
+<table class="profile-table">
+    <tr>
+        <th>Term-2</th>
+        <th>Attendance</th>
+        <th>Month wise</th>
+        <th>April</th><th>May</th><th>June</th><th>July</th><th>August</th><th>September</th>
+        <th>October</th><th>November</th><th>December</th><th>January</th><th>February</th><th>March</th>
+    </tr>
+    <tr>
+        <td>Programme Fees</td>
+        <td>Exam – Attendance Total</td>
+        <td></td>
+        {% for month in ['April','May','June','July','August','September','October','November','December','January','February','March'] %}
+            {% set att = current_user.student.attendance_records|selectattr('month', 'equalto', month)|first %}
+            <td>{% if att %}{{ att.present_days }}/{{ att.total_days }}{% endif %}</td>
+        {% endfor %}
+    </tr>
+</table>
+
+<!-- Exams MT-1 to Annual -->
+<table class="profile-table">
+    <tr>
+        <th>Term</th>
+        <th>School Level</th>
+        <th>Inter-school</th>
+        <th>State</th>
+        <th>National</th>
+        <th>International</th>
+        <th>Sports & Yoga</th>
+        <th>Literary Art, and Cultural</th>
+        <th>Clubs & Leadership</th>
+    </tr>
+    {% for term in ['MT-1','MT-2','MT-3','MT-4','MT-5','MT-6','Mid-Term/SA-1','Annual Exam','IIT/NEET'] %}
+    <tr>
+        <td>{{ term }}</td>
+        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- Fee Details with Arrears/Term1/Term2 -->
+<h3>Fee Details</h3>
+<table class="profile-table">
+    <tr>
+        <th>Fee Type</th><th>Academic Year</th><th>Arrears</th><th>Term 1</th><th>Term 2</th>
+        <th>Total</th><th>Paid</th><th>Balance Due</th>
+    </tr>
+    {% for fee in current_user.student.fees %}
+    <tr>
+        <td>{{ fee.name }}</td>
+        <td>{{ fee.academic_year }}</td>
+        <td>₹{{ "%.2f"|format(fee.arrears) }}</td>
+        <td>₹{{ "%.2f"|format(fee.term1) }}</td>
+        <td>₹{{ "%.2f"|format(fee.term2) }}</td>
+        <td><b>₹{{ "%.2f"|format(fee.amount) }}</b></td>
+        <td class="paid-amount">₹{{ "%.2f"|format(fee.paid_amount) }}</td>
+        <td class="balance-due">₹{{ "%.2f"|format(fee.amount - fee.paid_amount) }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" style="text-align:center;">No fee records</td></tr>
+    {% endfor %}
+</table>
+
+<!-- Discipline -->
+<table class="profile-table">
+    <tr>
+        <th>Discipline</th>
+        <th>Parent's Meetings</th>
+        <th>Counselling Attended</th>
+    </tr>
+    <tr>
+        <td class="report-card">Incidents: White Report Card<br>Yellow Report Card<br>Red Report Card</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td><b>Actions Taken</b></td>
+        <td colspan="2">
+            {% for d in current_user.student.discipline_records %}
+                <span class="report-card">{{ d.report_type }}</span> - {{ d.action_taken }}<br>
+            {% endfor %}
+        </td>
+    </tr>
+</table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('attendanceChart');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'],
+        datasets: [{
+            label: 'Attendance %',
+            data: [
+                {% for month in ['April','May','June','July','August','September','October','November','December','January','February','March'] %}
+                    {% set att = current_user.student.attendance_records|selectattr('month', 'equalto', month)|first %}
+                    {% if att and att.total_days > 0 %}{{ (att.present_days/att.total_days*100)|round(1) }}{% else %}0{% endif %},
+                {% endfor %}
+            ],
+            backgroundColor: '#8F9779', // Alloy Green bars
+            borderColor: '#FFD700', // Golden Yellow border
+            borderWidth: 2
+        }]
+    },
+    options: {
+        plugins: {
+            legend: {
+                labels: { color: '#8F9779' } // Alloy Green legend
+            }
+        },
+        scales: {
+            y: {
+                ticks: { color: '#8F9779' },
+                grid: { color: '#FFD70033' } // Faint golden grid
+            },
+            x: {
+                ticks: { color: '#8F9779' },
+                grid: { color: '#FFD70033' }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="alert alert-info">Upload .csv or .xlsx file only</div>
+<h3>Bulk Upload Students</h3>
+<form method="POST" action="{{ url_for('bulk_upload') }}" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv" required>
+    <button type="submit">Upload CSV</button>
+</form>
+<p>CSV Columns: <code>roll_no,name,class_name,division,father_mobile,mother_mobile,academic_year</code></p>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Exam Marks Entry - {{ student.name }}</h2>
+<form method="POST">
+    <select name="term" required>
+        <option value="">Select Term</option>
+        <option>MT-1</option><option>MT-2</option><option>MT-3</option>
+        <option>MT-4</option><option>MT-5</option><option>MT-6</option>
+        <option>Mid-Term/SA-1</option><option>Annual Exam</option>
+    </select><br><br>
+    <input type="text" name="subject" placeholder="Subject" required><br><br>
+    <input type="number" step="0.5" name="marks" placeholder="Marks Obtained" required><br><br>
+    <button type="submit">Add Marks</button>
+</form>
+
+<h3>Existing Records</h3>
+<table border="1" cellpadding="5">
+    <tr><th>Term</th><th>Subject</th><th>Marks</th></tr>
+    {% for exam in student.exam_records %}
+    <tr><td>{{ exam.term }}</td><td>{{ exam.subject }}</td><td>{{ exam.marks_obtained }}</td></tr>
+    {% endfor %}
+</table>
+<a href="{{ url_for('admin_student_page_control') }}">Back</a>
+{% endblock %}

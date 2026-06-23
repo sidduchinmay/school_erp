@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Add Teacher</h3>
+<form method="POST" style="max-width:400px">
+  <input name="name" class="form-control mb-2" placeholder="Teacher Name: Mr. Ramesh" required>
+  <input name="username" class="form-control mb-2" placeholder="Login Username: teacher1" required>
+  <input name="password" class="form-control mb-2" placeholder="Password: teacher123" required>
+  <select name="assigned_class" class="form-select mb-2" required>
+    <option value="">Assign Class</option>
+    <option>VIII</option><option>IX</option><option>X</option>
+  </select>
+  <select name="assigned_division" class="form-select mb-2" required>
+    <option value="">Assign Division</option>
+    <option>A</option><option>B</option><option>C</option>
+  </select>
+  <button class="btn btn-primary w-100">Create Teacher</button>
+</form>
+{% endblock %}

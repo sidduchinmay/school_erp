@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Admin Dashboard - APS 2025-26</h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Total Students</h5>
+        <h2>{{stats.students}}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Total Teachers</h5>
+        <h2>{{stats.teachers}}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Absent Today</h5>
+        <h2>{{stats.absent_today}}</h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h5>Admin Controls</h5>
+<div class="d-flex flex-wrap gap-2">
+  <a href="{{url_for('bulk_upload')}}" class="btn btn-primary">Bulk Upload Students</a>
+  <a href="{{url_for('admin_students_list')}}" class="btn btn-info">Manage Student Tabs</a>
+  <a href="{{url_for('add_teacher')}}" class="btn btn-warning">Add Teacher</a>
+</div>
+{% endblock %}

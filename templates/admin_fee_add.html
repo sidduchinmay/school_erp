@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Add Fee for {{ student.name }} - {{ student.roll_no }}</h2>
+
+<form method="POST">
+    <label>Fee Type:</label><br>
+    <select name="name" required>
+        <option value="">-- Select Fee Type --</option>
+        <option value="Tuition Fee">Tuition Fee</option>
+        <option value="Transport Fee">Transport Fee</option>
+        <option value="Hostel Fee">Hostel Fee</option>
+        <option value="Exam Fee">Exam Fee</option>
+        <option value="Library Fee">Library Fee</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+    </select><br><br>
+    
+    <label>Academic Year:</label><br>
+    <select name="academic_year" required>
+        <option value="2025-26">2025-26</option>
+        <option value="2024-25">2024-25</option>
+        <option value="2023-24">2023-24</option>
+    </select><br><br>
+    
+    <label>Arrears:</label><br>
+    <input type="number" name="arrears" step="0.01" value="0"><br><br>
+    
+    <label>Term 1:</label><br>
+    <input type="number" name="term1" step="0.01" value="0"><br><br>
+    
+    <label>Term 2:</label><br>
+    <input type="number" name="term2" step="0.01" value="0"><br><br>
+    
+    <label>Total Amount:</label><br>
+    <input type="number" name="amount" step="0.01" readonly><br><br>
+    
+    <label>Paid Amount:</label><br>
+    <input type="number" name="paid_amount" step="0.01" value="0"><br><br>
+    
+    <button type="submit">Add Fee</button>
+    <a href="{{ url_for('admin_student_page_control') }}">Cancel</a>
+</form>
+
+<script>
+function calcTotal() {
+    let arrears = parseFloat(document.querySelector('[name="arrears"]').value) || 0;
+    let term1 = parseFloat(document.querySelector('[name="term1"]').value) || 0;
+    let term2 = parseFloat(document.querySelector('[name="term2"]').value) || 0;
+    document.querySelector('[name="amount"]').value = (arrears + term1 + term2).toFixed(2);
+}
+document.querySelector('[name="arrears"]').addEventListener('input', calcTotal);
+document.querySelector('[name="term1"]').addEventListener('input', calcTotal);
+document.querySelector('[name="term2"]').addEventListener('input', calcTotal);
+calcTotal();
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Student Dashboard Controls</h3>
+<form method="post" action="{{ url_for('update_settings') }}">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_attendance" 
+               {% if settings.get('show_attendance', 'true') == 'true' %}checked{% endif %}>
+        <label class="form-check-label">Show Attendance Graph</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_exams"
+               {% if settings.get('show_exams', 'true') == 'true' %}checked{% endif %}>
+        <label class="form-check-label">Show Term-wise Marks</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_accolades"
+               {% if settings.get('show_accolades', 'true') == 'true' %}checked{% endif %}>
+        <label class="form-check-label">Show Accolades/Certificate</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_activities"
+               {% if settings.get('show_activities', 'true') == 'true' %}checked{% endif %}>
+        <label class="form-check-label">Show Activities</label>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_discipline"
+               {% if settings.get('show_discipline', 'true') == 'true' %}checked{% endif %}>
+        <label class="form-check-label">Show Discipline Records</label>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Save Settings</button>
+</form>
+{% endblock %}
