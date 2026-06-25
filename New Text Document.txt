@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Attendance Entry - {{ student.name }}</h2>
+<form method="POST">
+<table border="1" cellpadding="8" style="border-collapse:collapse;">
+    <tr><th>Month</th><th>Present Days</th><th>Total Days</th></tr>
+    {% for month in ['April','May','June','July','August','September','October','November','December','January','February','March'] %}
+    {% set att = student.attendance_records|selectattr('month', 'equalto', month)|first %}
+    <tr>
+        <td>{{ month }}</td>
+        <td><input type="number" name="{{ month }}_present" value="{{ att.present_days if att else 0 }}"></td>
+        <td><input type="number" name="{{ month }}_total" value="{{ att.total_days if att else 0 }}"></td>
+    </tr>
+    {% endfor %}
+</table>
+<br>
+<button type="submit">Save Attendance</button>
+<a href="{{ url_for('admin_student_page_control') }}">Cancel</a>
+</form>
+{% endblock %}
