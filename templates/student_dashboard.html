@@ -6,6 +6,22 @@ body {
     background-color: #F5F5DC; /* Beige - easy on eyes, feasible background */
 }
 
+.dashboard-header {
+    background: #8F9779;
+    color: #FFD700;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-radius: 0 0 8px 8px;
+}
+
+.dashboard-header h4 {
+    margin: 0;
+    color: #FFD700;
+}
+
 .student-container {
     background: #FFFFFF;
     padding: 20px;
@@ -66,6 +82,15 @@ h2, h3 {
 }
 </style>
 
+<!-- HEADER WITH CHANGE PASSWORD + LOGOUT - ADD THESE 2 LINES HERE -->
+<div class="dashboard-header">
+    <h4>APS 2025-26 ERP - Student Portal</h4>
+    <div>
+        <a href="{{ url_for('change_password') }}" class="btn btn-outline-light btn-sm">Change Password</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm ms-2">Logout</a>
+    </div>
+</div>
+
 <div class="student-container">
 <h2>Student Profile Interface</h2>
 
@@ -75,6 +100,8 @@ h2, h3 {
             <b>Photo</b><br>
             {% if current_user.student.photo %}
                 <img src="{{ url_for('static', filename='uploads/' + current_user.student.photo) }}" width="100" style="border: 2px solid #FFD700;">
+            {% else %}
+                <div style="width:100px; height:100px; border:2px solid #FFD700; margin:auto; line-height:100px; color:#8F9779;">No Photo</div>
             {% endif %}
         </td>
         <td style="width:35%;" class="profile-box">
@@ -128,7 +155,7 @@ h2, h3 {
     {% for term in ['MT-1','MT-2','MT-3','MT-4','MT-5','MT-6','Mid-Term/SA-1','Annual Exam','IIT/NEET'] %}
     <tr>
         <td>{{ term }}</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        <td></td><td></td>
     </tr>
     {% endfor %}
 </table>
