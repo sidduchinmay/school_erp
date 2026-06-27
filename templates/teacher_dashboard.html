@@ -5,5 +5,7 @@
   <a href="{{url_for('teacher_attendance')}}" class="list-group-item">Mark Attendance</a>
   <a href="#" class="list-group-item">Enter MT-1 to MT-6 Marks</a>
   <a href="#" class="list-group-item">View Student Profiles</a>
+<a href="{{ url_for('change_password') }}" class="btn btn-outline-light btn-sm">Change Password</a>
+<a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm ms-2">Logout</a>
 </div>
 {% endblock %}
