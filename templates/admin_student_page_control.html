@@ -2,17 +2,33 @@
 {% block content %}
 <h2>Student Page Control</h2>
 
-<form method="POST" enctype="multipart/form-data" style="margin-bottom:20px; border:1px solid #ccc; padding:15px;">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div style="padding:10px; margin:10px 0; background:{% if category == 'danger' %}#f8d7da{% else %}#d4edda{% endif %};
+                  border:1px solid {% if category == 'danger' %}#f5c6cb{% else %}#c3e6cb{% endif %};
+                  color:{% if category == 'danger' %}#721c24{% else %}#155724{% endif %};">
+        {{ message[1] }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST" enctype="multipart/form-data" style="margin-bottom:20px; border:1px solid #ccc; padding:15px; background:#f9f9f9;">
     <h3>Add New Student</h3>
-    <input type="text" name="name" placeholder="Student Name" required>
-    <input type="text" name="roll_no" placeholder="Roll No" required>
-    <input type="text" name="course" placeholder="Course" required>
-    <input type="text" name="batch" placeholder="Batch/Year" required>
-    <input type="text" name="section" placeholder="Section" required>
-    <input type="email" name="email" placeholder="Login Email" required>
-    <input type="password" name="password" placeholder="Login Password" required>
-    <input type="file" name="photo">
-    <button type="submit">Add Student</button>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:10px;">
+        <input type="text" name="name" placeholder="Student Name" required style="padding:8px;">
+        <input type="text" name="roll_no" placeholder="Roll No / Login Username" required style="padding:8px;">
+        <input type="text" name="course" placeholder="Course" required style="padding:8px;">
+        <input type="text" name="batch" placeholder="Batch/Year" required style="padding:8px;">
+        <input type="text" name="section" placeholder="Section" required style="padding:8px;">
+        <input type="email" name="email" placeholder="Email - optional" style="padding:8px;">
+        <input type="password" name="password" placeholder="Login Password" required style="padding:8px;">
+        <input type="file" name="photo" accept="image/*" style="padding:8px;">
+    </div>
+    <button type="submit" style="padding:10px 20px; background:#007bff; color:white; border:none; cursor:pointer;">
+        Add Student
+    </button>
 </form>
 
 <h3>All Students</h3>
@@ -22,10 +38,6 @@
         <th>Name</th>
         <th>Roll No</th>
         <th>Course</th>
-        <th>Batch</th>
-        <th>Section</th>
-        
-        <th>Fee Details</th>
         <th>Actions</th>
     </tr>
     {% for student in students %}
@@ -40,39 +52,10 @@
         <td>{{ student.name }}</td>
         <td>{{ student.roll_no }}</td>
         <td>{{ student.course }}</td>
-        <td>{{ student.batch }}</td>
-        <td>{{ student.section }}</td>
-        
-        <td style="min-width:300px;">
-            {% for fee in student.fees %}
-                <div style="border:1px solid #ccc; margin-bottom:10px; padding:8px; border-radius:4px;">
-                    <b>{{ fee.name }} - {{ fee.academic_year }}</b><br>
-                    Arrears: ₹{{ "%.2f"|format(fee.arrears) }} | 
-                    Term1: ₹{{ "%.2f"|format(fee.term1) }} | 
-                    Term2: ₹{{ "%.2f"|format(fee.term2) }}<br>
-                    <b>Total: ₹{{ "%.2f"|format(fee.amount) }} | 
-                    Paid: ₹{{ "%.2f"|format(fee.paid_amount) }} | 
-                    Due: <span style="color:{% if fee.amount - fee.paid_amount > 0 %}red{% else %}green{% endif %};">
-                        ₹{{ "%.2f"|format(fee.amount - fee.paid_amount) }}
-                    </span></b>
-                </div>
-            {% else %}
-                <span style="color:#777;">No fees added</span>
-            {% endfor %}
-        </td>
-       <td>
-    <a href="{{ url_for('admin_fee_add', student_id=student.id) }}">Fee</a> |
-    <a href="{{ url_for('admin_attendance', student_id=student.id) }}">Attendance</a> |
-    <a href="{{ url_for('admin_exam', student_id=student.id) }}">Exams</a> |
-    <a href="{{ url_for('admin_student_preview', student_id=student.id) }}" target="_blank">Preview Page</a> |
-    <a href="{{ url_for('admin_student_delete', student_id=student.id) }}" 
-       onclick="return confirm('Delete?')">Delete</a>
-</td>
+        <td>Login: {{ student.roll_no }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="8">No students found</td></tr>
+    <tr><td colspan="5">No students found</td></tr>
     {% endfor %}
 </table>
-
-<a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
 {% endblock %}
