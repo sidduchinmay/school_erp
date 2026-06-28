@@ -3,14 +3,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkwerk.utils import secure_filename
+from werkzeug.utils import secure_filename # ← FIXED THIS TYPO
 
-# 1. Create db with NO app. This is the only db instance.
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 
-# 2. Create app and bind db inside factory
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-this')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
@@ -20,7 +18,7 @@ UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-db.init_app(app) # <-- Only time db is bound to app
+db.init_app(app)
 login_manager.init_app(app)
 
 # -------------------- MODELS --------------------
@@ -160,7 +158,6 @@ def student_dashboard():
         return redirect(url_for('logout'))
     return render_template('student_dashboard.html', student=student)
 
-# -------------------- CREATE DB + ADMIN --------------------
 def create_admin():
     with app.app_context():
         db.create_all()
