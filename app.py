@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from flask_login import login_required, current_user
 import os
 
 app = Flask(__name__)
@@ -224,48 +225,44 @@ def admin_student_page_control():
         flash('Access denied')
         return redirect(url_for('index'))
     
-    if request.method == 'POST':
-        # 1. Get data from form
+    if request.method == 'POST':   # ← Everything below must be indented under this
         username = request.form.get('username')
         password = request.form.get('password')
         name = request.form.get('name')
         roll_no = request.form.get('roll_no')
         photo = request.files.get('photo')
         
-        # 2. Check if username already exists
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('admin_student_page_control'))
         
-        # 3. Handle photo upload
         filename = None
         if photo and photo.filename != '':
             filename = secure_filename(photo.filename)
             photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        # 4. Create User first ← ADD YOUR LINES HERE
+        # Create User - INDENTED
         new_user = User(
             username=username,
             password=generate_password_hash(password),
             role='student'
         )
         db.session.add(new_user)
-        db.session.flush()  # This gives us new_user.id before commit
+        db.session.flush()
         
-        # 5. Create Student linked to that User ← AND HERE
+        # Create Student - INDENTED  
         new_student = Student(
             name=name, 
             roll_no=roll_no,
             photo=filename,
-            user_id=new_user.id  # ← Links student to user account
+            user_id=new_user.id
         )
-        db.session.add(new_student)
-        db.session.commit()  # Save both to database
+        db.session.add(new_student)  # ← Must be indented same as new_student = 
+        db.session.commit()
         
         flash('Student added successfully')
         return redirect(url_for('admin_student_page_control'))
     
-    # GET request: show the page with all students
     students = Student.query.all()
     return render_template('admin_student_page_control.html', students=students)
 
