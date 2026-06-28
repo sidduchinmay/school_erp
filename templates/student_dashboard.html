@@ -1,90 +1,78 @@
 {% extends "base.html" %}
-
-{% block title %}Student Profile{% endblock %}
-
+{% block title %}Student Dashboard{% endblock %}
 {% block content %}
-<div class="container-fluid mt-3">
-    <h3 class="text-center mb-4">Student Profile Interface</h3>
-    
-    <div class="row">
-        <!-- Left: Photos -->
-        <div class="col-md-2">
-            <div class="card mb-3">
-                <div class="card-body text-center">
-                    {% if student.photo %}
-                        <img src="{{ url_for('static', filename='uploads/' + student.photo) }}" 
-                             class="img-fluid" style="max-height:150px" alt="Photo">
-                    {% else %}
-                        <div style="height:150px; background:#eee; display:flex; align-items:center; justify-content:center;">
-                            Photo
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body text-center" style="height:150px;">Photo</div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body text-center" style="height:150px;">Photo</div>
-            </div>
-        </div>
+<h2 class="mb-4">Student Dashboard</h2>
 
-        <!-- Middle: Profile Details -->
-        <div class="col-md-5">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5><strong>Profile</strong></h5>
-                    <p><strong>Name:</strong> {{ student.name }}</p>
-                    <p><strong>Class & Division:</strong> {{ student.class_division or 'N/A' }}</p>
-                    <p><strong>Day Scholar / Hostel:</strong> {{ student.day_scholar_hostel or 'N/A' }}</p>
-                    <p><strong>Father's Mobile:</strong> {{ student.father_mobile or 'N/A' }}</p>
-                    <p><strong>Mother's Mobile:</strong> {{ student.mother_mobile or 'N/A' }}</p>
-                    <p><strong>Emergency Number/s:</strong> {{ student.emergency_number or 'N/A' }}</p>
-                    <p><strong>Email ID:</strong> {{ student.email or 'N/A' }}</p>
-                    <p><strong>Roll Number:</strong> {{ student.roll_no }}</p>
-                    <p><strong>Aadhaar Number:</strong> {{ student.aadhaar_number or 'N/A' }}</p>
-                    <p><strong>Siblings in the same school:</strong> {{ student.siblings_in_school or 'N/A' }}</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <p><strong>Current Address</strong></p>
-                    <p>{{ student.current_address or 'N/A' }}</p>
-                    <hr>
-                    <p><strong>Permanent Address</strong></p>
-                    <p>{{ student.permanent_address or 'N/A' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right: Graphs + Payment -->
-        <div class="col-md-5">
-            <div class="card mb-3">
-                <div class="card-header"><strong>Attendance Graph</strong></div>
-                <div class="card-body" style="height:200px;">
-                    <!-- Placeholder for chart -->
-                    <canvas id="attendanceChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="card mb-3">
-                <div class="card-header"><strong>Academic Graph</strong></div>
-                <div class="card-body" style="height:200px;">
-                    <canvas id="academicChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body text-center">
-                    <a href="#" class="btn btn-success btn-lg">Click Here to Pay</a>
-                </div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if student.photo %}
+                <img src="{{ url_for('static', filename='uploads/' + student.photo) }}" 
+                     class="img-fluid rounded mb-3" style="max-height: 200px;" alt="Student Photo">
+                {% else %}
+                <div class="bg-secondary text-white p-5 mb-3 rounded">No Photo</div>
+                {% endif %}
+                <h4>{{ student.name }}</h4>
+                <p class="text-muted">{{ student.class_division }}</p>
             </div>
         </div>
     </div>
-    
-    <div class="mt-3 text-center">
-        <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Student Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <td><strong>Roll No</strong></td>
+                        <td>{{ student.roll_no }}</td>
+                        <td><strong>Day Scholar/Hostel</strong></td>
+                        <td>{{ student.day_scholar_hostel }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Father Mobile</strong></td>
+                        <td>{{ student.father_mobile }}</td>
+                        <td><strong>Mother Mobile</strong></td>
+                        <td>{{ student.mother_mobile }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emergency Number</strong></td>
+                        <td>{{ student.emergency_number }}</td>
+                        <td><strong>Email</strong></td>
+                        <td>{{ student.email }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Aadhaar Number</strong></td>
+                        <td>{{ student.aadhaar_number }}</td>
+                        <td><strong>Siblings in School</strong></td>
+                        <td>{{ student.siblings_in_school }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Address</strong></td>
+                        <td colspan="3">{{ student.current_address }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Permanent Address</strong></td>
+                        <td colspan="3">{{ student.permanent_address }}</td>
+                    </tr>
+                </table>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" onclick="window.print()">Print ID Card</button>
+                    <a href="#" class="btn btn-primary">Download Details PDF</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+@media print {
+    .navbar, .btn { display: none !important; }
+    .card { border: none !important; }
+}
+</style>
 {% endblock %}
