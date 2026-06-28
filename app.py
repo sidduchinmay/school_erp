@@ -198,7 +198,88 @@ def student_dashboard():
     if current_user.role != 'student':
         flash('Access denied')
         return redirect(url_for('index'))
-    return render_template('student_dashboard.html')
+    
+    # Safe check - don't crash if student record missing
+    student = Student.query.filter_by(user_id=current_user.id).first()
+    if not student:
+        flash('Student profile not found. Contact admin.')
+        return redirect(url_for('logout'))
+    
+    return render_template('student_dashboard.html', student=student)
+
+
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.route('/admin/student-control', methods=['GET', 'POST'])
+@login_required
+def admin_student_page_control():
+    if current_user.role != 'admin':
+        flash('Access denied')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        # Handle file upload
+        photo_filename = None
+        if 'photo' in request.files:
+            photo = request.files['photo']
+            if photo.filename != '':
+                photo_filename = secure_filename(photo.filename)
+                photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+        
+        # Create user account for student
+        hashed_pw = generate_password_hash(request.form['password'])
+        new_user = User(
+            username=request.form['roll_no'],
+            email=request.form.get('email') or f"{request.form['roll_no']}@college.com",
+            password_hash=hashed_pw,
+            role='student'
+        )
+        db.session.add(new_user)
+        db.session.flush()  # Get user.id before commit
+        
+        # Create student profile
+        new_student = Student(
+            user_id=new_user.id,
+            name=request.form['name'],
+            roll_no=request.form['roll_no'],
+            course=request.form['course'],
+            batch=request.form['batch'],
+            section=request.form['section'],
+            photo=photo_filename
+        )
+        db.session.add(new_student)
+        db.session.commit()
+        flash('Student added successfully', 'success')
+        return redirect(url_for('admin_student_page_control'))
+    
+    students = Student.query.all()
+    return render_template('admin_student_page_control.html', students=students)
+
+@app.route('/admin/delete-student/<int:student_id>')
+@login_required
+def delete_student(student_id):
+    if current_user.role != 'admin':
+        flash('Access denied')
+        return redirect(url_for('index'))
+    
+    student = Student.query.get_or_404(student_id)
+    user = User.query.get(student.user_id)
+    
+    # Delete photo file
+    if student.photo:
+        photo_path = os.path.join(app.config['UPLOAD_FOLDER'], student.photo)
+        if os.path.exists(photo_path):
+            os.remove(photo_path)
+    
+    db.session.delete(student)
+    db.session.delete(user)
+    db.session.commit()
+    flash('Student deleted', 'success')
+    return redirect(url_for('admin_student_page_control'))
+
+
 
 # ------------------ MAIN ------------------
 if __name__ == '__main__':
