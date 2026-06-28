@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
@@ -10,35 +11,31 @@ app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+db.session.add(new_student)
+db.session.commit()  # ← Missing this = no error but data doesn't save. Missing .add() = crash
 
 # ------------------ MODELS ------------------
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # admin, teacher, student
+    password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
     student = db.relationship('Student', backref='user', uselist=False)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    roll_no = db.Column(db.String(20), unique=True, nullable=False)
-    course = db.Column(db.String(50))
-    section = db.Column(db.String(10))
+    roll_no = db.Column(db.String(50), nullable=False)
     photo = db.Column(db.String(200))
-    hostel_status = db.Column(db.String(20))
-    father_mobile = db.Column(db.String(15))
-    mother_mobile = db.Column(db.String(15))
-    attendance_records = db.relationship('Attendance', backref='student', lazy=True)
-    fees = db.relationship('Fee', backref='student', lazy=True)
-    discipline_records = db.relationship('Discipline', backref='student', lazy=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # ← This field is required
 
 class Attendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -228,40 +225,47 @@ def admin_student_page_control():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        # Handle file upload
-        photo_filename = None
-        if 'photo' in request.files:
-            photo = request.files['photo']
-            if photo.filename != '':
-                photo_filename = secure_filename(photo.filename)
-                photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+        # 1. Get data from form
+        username = request.form.get('username')
+        password = request.form.get('password')
+        name = request.form.get('name')
+        roll_no = request.form.get('roll_no')
+        photo = request.files.get('photo')
         
-        # Create user account for student
-        hashed_pw = generate_password_hash(request.form['password'])
+        # 2. Check if username already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+            return redirect(url_for('admin_student_page_control'))
+        
+        # 3. Handle photo upload
+        filename = None
+        if photo and photo.filename != '':
+            filename = secure_filename(photo.filename)
+            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        # 4. Create User first ← ADD YOUR LINES HERE
         new_user = User(
-            username=request.form['roll_no'],
-            email=request.form.get('email') or f"{request.form['roll_no']}@college.com",
-            password_hash=hashed_pw,
+            username=username,
+            password=generate_password_hash(password),
             role='student'
         )
         db.session.add(new_user)
-        db.session.flush()  # Get user.id before commit
+        db.session.flush()  # This gives us new_user.id before commit
         
-        # Create student profile
+        # 5. Create Student linked to that User ← AND HERE
         new_student = Student(
-            user_id=new_user.id,
-            name=request.form['name'],
-            roll_no=request.form['roll_no'],
-            course=request.form['course'],
-            batch=request.form['batch'],
-            section=request.form['section'],
-            photo=photo_filename
+            name=name, 
+            roll_no=roll_no,
+            photo=filename,
+            user_id=new_user.id  # ← Links student to user account
         )
         db.session.add(new_student)
-        db.session.commit()
-        flash('Student added successfully', 'success')
+        db.session.commit()  # Save both to database
+        
+        flash('Student added successfully')
         return redirect(url_for('admin_student_page_control'))
     
+    # GET request: show the page with all students
     students = Student.query.all()
     return render_template('admin_student_page_control.html', students=students)
 
