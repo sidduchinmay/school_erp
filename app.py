@@ -36,6 +36,16 @@ class Student(db.Model):
     name = db.Column(db.String(100), nullable=False)
     roll_no = db.Column(db.String(50), nullable=False)
     photo = db.Column(db.String(200))
+    class_division = db.Column(db.String(50))  # Class & Division
+    day_scholar_hostel = db.Column(db.String(20))  # Day Scholar / Hostel
+    father_mobile = db.Column(db.String(15))
+    mother_mobile = db.Column(db.String(15))
+    emergency_number = db.Column(db.String(15))
+    email = db.Column(db.String(120))
+    aadhaar_number = db.Column(db.String(20))
+    siblings_in_school = db.Column(db.String(10))  # Yes/No
+    current_address = db.Column(db.Text)
+    permanent_address = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # ← This field is required
 
 class Attendance(db.Model):
@@ -205,10 +215,9 @@ def student_dashboard():
         flash('Access denied')
         return redirect(url_for('index'))
     
-    # Safe check - don't crash if student record missing
     student = Student.query.filter_by(user_id=current_user.id).first()
     if not student:
-        flash('Student profile not found. Contact admin.')
+        flash('Student profile not found')
         return redirect(url_for('logout'))
     
     return render_template('student_dashboard.html', student=student)
