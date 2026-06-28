@@ -158,6 +158,7 @@ def student_dashboard():
         return redirect(url_for('logout'))
     return render_template('student_dashboard.html', student=student)
 
+# -------------------- CREATE DB + ADMIN --------------------
 def create_admin():
     with app.app_context():
         db.create_all()
@@ -167,6 +168,9 @@ def create_admin():
             db.session.commit()
             print('Default admin created: username=admin, password=admin123')
 
-if __name__ == '__main__':
+# Run this on startup for Render/Gunicorn
+with app.app_context():
     create_admin()
+
+if __name__ == '__main__':
     app.run(debug=True)
