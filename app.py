@@ -182,7 +182,15 @@ def admin_dashboard():
     if current_user.role != 'admin':
         flash('Access denied')
         return redirect(url_for('index'))
-    return render_template('admin_dashboard.html')
+    
+    # Get counts for dashboard
+    stats = {
+        'students': Student.query.count(),
+        'teachers': User.query.filter_by(role='teacher').count(),
+        'users': User.query.count()
+    }
+    
+    return render_template('admin_dashboard.html', user=current_user, stats=stats)
 
 @app.route('/teacher/dashboard')
 @login_required

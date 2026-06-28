@@ -1,41 +1,49 @@
 {% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
 {% block content %}
-<h3>Admin Dashboard - APS 2025-26</h3>
+<div class="container mt-4">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, <strong>{{ current_user.username }}</strong></p>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Students</h5>
+                    <h2>{{ stats.students }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Teachers</h5>
+                    <h2>{{ stats.teachers }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2>{{ stats.users }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="card text-center">
-      <div class="card-body">
-        <h5>Total Students</h5>
-        <h2>{{stats.students}}</h2>
-      </div>
+    <div class="mt-4">
+        <h3>Admin Controls</h3>
+        <a href="{{ url_for('admin_student_page_control') }}" class="btn btn-primary">
+            Manage Students
+        </a>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">
+            Logout
+        </a>
     </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card text-center">
-      <div class="card-body">
-        <h5>Total Teachers</h5>
-        <h2>{{stats.teachers}}</h2>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card text-center">
-      <div class="card-body">
-        <h5>Absent Today</h5>
-        <h2>{{stats.absent_today}}</h2>
-      </div>
-    </div>
-  </div>
-</div>
-
-<h5>Admin Controls</h5>
-<div class="Admin Controls">
-    <a href="{{ url_for('bulk_upload') }}" class="btn btn-primary">Bulk Upload Students</a>
-      <a href="{{ url_for('admin_student_page_control') }}">Manage Students</a>
-    <a href="{{ url_for('add_teacher') }}" class="btn btn-warning">Add Teacher</a>
-    <a href="{{ url_for('create_student') }}" class="btn btn-success">Create Student</a>
-	<a href="{{ url_for('change_password') }}" class="btn btn-outline-light btn-sm">Change Password</a>
-<a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm ms-2">Logout</a>
 </div>
 {% endblock %}
