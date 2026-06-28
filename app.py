@@ -8,20 +8,17 @@ from flask_login import login_required, current_user
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-UPLOAD_FOLDER = 'static/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+db = SQLAlchemy(app)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-db.session.add(new_student)
-db.session.commit()  # ← Missing this = no error but data doesn't save. Missing .add() = crash
+
+
 
 # ------------------ MODELS ------------------
 class User(UserMixin, db.Model):
@@ -234,11 +231,22 @@ def admin_student_page_control():
         flash('Access denied')
         return redirect(url_for('index'))
     
-    if request.method == 'POST':   # ← Everything below must be indented under this
+    if request.method == 'POST':
+        # 1. Get all form data
         username = request.form.get('username')
         password = request.form.get('password')
         name = request.form.get('name')
         roll_no = request.form.get('roll_no')
+        class_division = request.form.get('class_division')
+        day_scholar_hostel = request.form.get('day_scholar_hostel')
+        father_mobile = request.form.get('father_mobile')
+        mother_mobile = request.form.get('mother_mobile')
+        emergency_number = request.form.get('emergency_number')
+        email = request.form.get('email')
+        aadhaar_number = request.form.get('aadhaar_number')
+        siblings_in_school = request.form.get('siblings_in_school')
+        current_address = request.form.get('current_address')
+        permanent_address = request.form.get('permanent_address')
         photo = request.files.get('photo')
         
         if User.query.filter_by(username=username).first():
@@ -250,7 +258,7 @@ def admin_student_page_control():
             filename = secure_filename(photo.filename)
             photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        # Create User - INDENTED
+        # 2. Create User
         new_user = User(
             username=username,
             password=generate_password_hash(password),
@@ -259,14 +267,24 @@ def admin_student_page_control():
         db.session.add(new_user)
         db.session.flush()
         
-        # Create Student - INDENTED  
+        # 3. Create Student with all fields
         new_student = Student(
             name=name, 
             roll_no=roll_no,
             photo=filename,
+            class_division=class_division,
+            day_scholar_hostel=day_scholar_hostel,
+            father_mobile=father_mobile,
+            mother_mobile=mother_mobile,
+            emergency_number=emergency_number,
+            email=email,
+            aadhaar_number=aadhaar_number,
+            siblings_in_school=siblings_in_school,
+            current_address=current_address,
+            permanent_address=permanent_address,
             user_id=new_user.id
         )
-        db.session.add(new_student)  # ← Must be indented same as new_student = 
+        db.session.add(new_student)
         db.session.commit()
         
         flash('Student added successfully')

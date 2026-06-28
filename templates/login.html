@@ -1,42 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - APS ERP</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="font-family:Arial; background:#f4f4f4;">
-    <div style="max-width:400px; margin:50px auto; padding:20px; background:white; border:1px solid #ccc; border-radius:8px;">
-        <h2 style="text-align:center;">APS 2025-26 ERP Login</h2>
+{% extends "base.html" %}
 
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            {% for msg in messages %}
-              <p style="color:red; text-align:center; background:#ffe6e6; padding:8px; border-radius:4px;">{{ msg }}</p>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+{% block title %}Login{% endblock %}
 
-        <form method="POST">
-            <label>Select Role</label>
-            <select name="role" required style="width:100%; padding:10px; margin:5px 0 15px; box-sizing:border-box; border:1px solid #ccc;">
-                <option value="">-- Select Role --</option>
-                <option value="admin">Admin</option>
-                <option value="teacher">Teacher</option>
-                <option value="student">Student</option>
-            </select>
-
-            <label>Username / Roll No</label>
-            <input type="text" name="username" required
-                   style="width:100%; padding:10px; margin:5px 0 15px; box-sizing:border-box; border:1px solid #ccc;">
-
-            <label>Password</label>
-            <input type="password" name="password" required
-                   style="width:100%; padding:10px; margin:5px 0 15px; box-sizing:border-box; border:1px solid #ccc;">
-
-            <button type="submit" style="width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer; font-size:16px;">
-                Login
-            </button>
-        </form>
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4>Login</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label>Username</label>
+                        <input type="text" name="username" class="form-control" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </div>
+            <div class="card-footer text-muted text-center">
+                <small>Default Admin: admin / admin123</small>
+            </div>
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
