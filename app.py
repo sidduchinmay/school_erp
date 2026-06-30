@@ -1,11 +1,44 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
+import os
 
 app = Flask(__name__)
-app.secret_key = 'aps-erp-secret-key-2025-26' # Change this
+app.secret_key = 'aps-erp-secret-key-2025-26'
+
+DB_PATH = 'school.db'
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL,
+            name TEXT NOT NULL,
+            class_division TEXT
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS erp_data (
+            id INTEGER PRIMARY KEY,
+            fee_payment TEXT, attendance TEXT, academic_progress TEXT, accolades TEXT,
+            applications TEXT, participation TEXT, schedules TEXT, view_calendar TEXT, downloads TEXT,
+            discipline TEXT, parents_meetings TEXT, counselling TEXT
+        )
+    ''')
+    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('admin', 'admin123', 'admin', 'Principal', 'All')")
+    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('student1', 'pass123', 'student', 'John Doe', '10-A')")
+    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('teacher1', 'teach123', 'teacher', 'Mrs. Sharma', 'Staff')")
+    conn.execute("INSERT OR IGNORE INTO erp_data (id) VALUES (1)")
+    conn.commit()
+    conn.close()
+
+# Run this when app starts
+init_db()
 
 def get_db_connection():
-    conn = sqlite3.connect('school.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -41,8 +74,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        role = request.form['role'] # admin, student, teacher
-
+        role = request.form['role']
         user = check_user(username, password, role)
         if user:
             session['user_id'] = user['id']
@@ -51,7 +83,6 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             return render_template('login.html', error="Invalid credentials or role")
-
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
     return render_template('login.html')
@@ -60,21 +91,15 @@ def login():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
     user = get_user_by_id(session['user_id'])
     erp_data = get_all_erp_data()
     is_admin = session.get('role') == 'admin'
-
-    return render_template('student_dashboard.html',
-                           user=user,
-                           erp_data=erp_data,
-                           is_admin=is_admin)
+    return render_template('student_dashboard.html', user=user, erp_data=erp_data, is_admin=is_admin)
 
 @app.route('/admin/update_erp', methods=['POST'])
 def update_erp():
     if session.get('role')!= 'admin':
         return "Unauthorized", 403
-
     data = request.json
     conn = get_db_connection()
     conn.execute('''
