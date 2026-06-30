@@ -139,6 +139,23 @@ def update_student(student_id):
     conn.close()
     return {"status": "success"}
 
+@app.route('/admin/update_erp', methods=['POST'])
+def update_erp():
+    if 'user_id' not in session:
+        return "Unauthorized", 403
+    data = request.json
+    conn = get_db_connection()
+    conn.execute('INSERT OR IGNORE INTO student_data (user_id) VALUES (?)', (session['user_id'],))
+    # Build update dynamically for whatever field was sent
+    field = list(data.keys())[0]
+    value = data[field]
+    conn.execute(f'UPDATE student_data SET {field}=? WHERE user_id=?', (value, session['user_id']))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
+
+
+
 @app.route('/admin/bulk_upload', methods=['POST'])
 def bulk_upload():
     if session.get('role')!= 'admin':

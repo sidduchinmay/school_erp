@@ -1,34 +1,418 @@
-async function saveData(field) {
-    let value = '';
-    if(field === 'fee_payment') value = document.getElementById('fee_payment_select').value;
-    else if(field === 'attendance') {
-        let m = document.getElementById('attendance_month').value;
-        let s = document.getElementById('attendance_status').value;
-        let d = document.getElementById('attendance_text').value;
-        value = `${m} - ${s} | ${d}`;
-    }
-    else if(field === 'academic_progress') {
-        let t = document.getElementById('term_select').value;
-        let g = document.getElementById('grade_select').value;
-        let d = document.getElementById('academic_progress_text').value;
-        value = `${t} - Grade: ${g} | ${d}`;
-    }
-    else value = document.getElementById(field + '_text')? document.getElementById(field + '_text').value : '';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APS ERP - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; }
+      .header { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+      .header h1 { font-size: 22px; }
+      .logout { background: #e74c3c; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; }
+      .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+      .user-info { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+      .tab-btn { padding: 10px 15px; background: #bdc3c7; border: none; border-radius: 5px 5px 0 0; cursor: pointer; font-size: 14px; }
+      .tab-btn.active { background: #3498db; color: white; }
+      .tab-content { background: white; padding: 20px; border-radius: 0 8px 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; }
+      .tab-content.active { display: block; }
+      .field-row { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+      .field-row label { width: 180px; font-weight: bold; }
+      .field-row span { flex: 1; }
+      .field-row select,.field-row input,.field-row textarea { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+      .save-btn { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APS ERP 2025-26</h1>
+        <div>
+            <span>{{ user.name }} | {{ user.role | title }} {% if is_admin and editing_student_id %}| Editing: {{ user.name }}{% endif %}</span>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+    </div>
 
-    const data = {};
-    data[field] = value;
+    <div class="container">
+        <div class="user-info">
+            <strong>Name:</strong> {{ user.name }} |
+            <strong>Role:</strong> {{ user.role | title }} |
+            <strong>Class:</strong> {{ user.class_division }} |
+            <strong>Roll No:</strong> {{ user.roll_no or 'N/A' }}
+        </div>
 
-    const url = {% if is_admin and editing_student_id %}'/admin/update_student/{{ editing_student_id }}'{% else %}'/admin/update_erp'{% endif %};
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('fee_payment')">Fee Payment</button>
+            <button class="tab-btn" onclick="openTab('attendance')">Attendance</button>
+            <button class="tab-btn" onclick="openTab('academic_progress')">Academic Progress</button>
+            <button class="tab-btn" onclick="openTab('accolades')">Accolades</button>
+            <button class="tab-btn" onclick="openTab('applications')">Applications</button>
+            <button class="tab-btn" onclick="openTab('participation')">Participation</button>
+            <button class="tab-btn" onclick="openTab('schedules')">Schedules</button>
+            <button class="tab-btn" onclick="openTab('view_calendar')">View Calendar</button>
+            <button class="tab-btn" onclick="openTab('downloads')">Downloads</button>
+            <button class="tab-btn" onclick="openTab('discipline')">Discipline</button>
+            <button class="tab-btn" onclick="openTab('parents_meetings')">Parents Meetings</button>
+            <button class="tab-btn" onclick="openTab('counselling')">Counselling</button>
+        </div>
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    });
-    if(res.ok) {
-        alert('Saved successfully!');
-        location.reload();
-    } else {
-        alert('Error saving data');
-    }
-}
+        <!-- Fee Payment Tab -->
+        <div id="fee_payment" class="tab-content active">
+            <h3>Fee Payment Status</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Status:</label>
+                <select id="fee_payment_select">
+                    <option value="Paid" {% if erp_data.fee_payment == 'Paid' %}selected{% endif %}>Paid</option>
+                    <option value="Unpaid" {% if erp_data.fee_payment == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                    <option value="Pending" {% if erp_data.fee_payment == 'Pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <button class="save-btn" onclick="saveData('fee_payment')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Status:</label><span>{{ erp_data.fee_payment or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="attendance" class="tab-content">
+            <h3>Attendance</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Month:</label>
+                <select id="attendance_month">
+                    <option>January</option><option>February</option><option>March</option><option>April</option>
+                    <option>May</option><option>June</option><option>July</option><option>August</option>
+                    <option>September</option><option>October</option><option>November</option><option>December</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Status:</label>
+                <select id="attendance_status">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Leave">Leave</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="attendance_text" rows="3">{{ erp_data.attendance or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('attendance')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.attendance or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Academic Progress Tab -->
+        <div id="academic_progress" class="tab-content">
+            <h3>Academic Progress</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Term:</label>
+                <select id="term_select">
+                    <option value="Term 1">Term 1</option>
+                    <option value="Term 2">Term 2</option>
+                    <option value="Annual">Annual</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Grade:</label>
+                <select id="grade_select">
+                    <option value="A+">A+</option><option value="A">A</option><option value="B+">B+</option>
+                    <option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="F">F</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Remarks:</label>
+                <textarea id="academic_progress_text" rows="3">{{ erp_data.academic_progress or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('academic_progress')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.academic_progress or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Accolades Tab -->
+        <div id="accolades" class="tab-content">
+            <h3>Accolades</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Type:</label>
+                <select id="accolades_type">
+                    <option value="Sports">Sports</option>
+                    <option value="Academics">Academics</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="accolades_text" rows="3">{{ erp_data.accolades or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('accolades')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.accolades or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Applications Tab -->
+        <div id="applications" class="tab-content">
+            <h3>Applications</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Status:</label>
+                <select id="applications_status">
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="applications_text" rows="3">{{ erp_data.applications or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('applications')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.applications or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Participation Tab -->
+        <div id="participation" class="tab-content">
+            <h3>Participation</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Event Type:</label>
+                <select id="participation_type">
+                    <option value="Sports">Sports</option>
+                    <option value="Debate">Debate</option>
+                    <option value="Science Fair">Science Fair</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="participation_text" rows="3">{{ erp_data.participation or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('participation')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.participation or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Schedules Tab -->
+        <div id="schedules" class="tab-content">
+            <h3>Schedules</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Day:</label>
+                <select id="schedule_day">
+                    <option>Mon</option><option>Tue</option><option>Wed</option>
+                    <option>Thu</option><option>Fri</option><option>Sat</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Period:</label>
+                <select id="schedule_period">
+                    <option>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="schedules_text" rows="3">{{ erp_data.schedules or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('schedules')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.schedules or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- View Calendar Tab -->
+        <div id="view_calendar" class="tab-content">
+            <h3>View Calendar</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Month:</label>
+                <select id="calendar_month">
+                    <option>January</option><option>February</option><option>March</option><option>April</option>
+                    <option>May</option><option>June</option><option>July</option><option>August</option>
+                    <option>September</option><option>October</option><option>November</option><option>December</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Event Type:</label>
+                <select id="calendar_event_type">
+                    <option value="Holiday">Holiday</option>
+                    <option value="Exam">Exam</option>
+                    <option value="PTM">PTM</option>
+                    <option value="Activity">Activity</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="view_calendar_text" rows="3">{{ erp_data.view_calendar or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('view_calendar')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.view_calendar or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Downloads Tab -->
+        <div id="downloads" class="tab-content">
+            <h3>Downloads</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>File Type:</label>
+                <select id="downloads_type">
+                    <option value="Syllabus">Syllabus</option>
+                    <option value="Timetable">Timetable</option>
+                    <option value="Report Card">Report Card</option>
+                    <option value="Circular">Circular</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Link/Details:</label>
+                <textarea id="downloads_text" rows="3">{{ erp_data.downloads or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('downloads')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.downloads or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Discipline Tab -->
+        <div id="discipline" class="tab-content">
+            <h3>Discipline</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Remarks:</label>
+                <select id="discipline_remarks">
+                    <option value="Good">Good</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Severe">Severe</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="discipline_text" rows="3">{{ erp_data.discipline or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('discipline')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.discipline or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Parents Meetings Tab -->
+        <div id="parents_meetings" class="tab-content">
+            <h3>Parents Meetings</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Status:</label>
+                <select id="ptm_status">
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Time Slot:</label>
+                <select id="ptm_time">
+                    <option>9AM-10AM</option><option>10AM-11AM</option><option>11AM-12PM</option>
+                    <option>1PM-2PM</option><option>2PM-3PM</option><option>3PM-4PM</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="parents_meetings_text" rows="3">{{ erp_data.parents_meetings or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('parents_meetings')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.parents_meetings or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Counselling Tab -->
+        <div id="counselling" class="tab-content">
+            <h3>Counselling</h3>
+            {% if is_admin %}
+            <div class="field-row">
+                <label>Session Type:</label>
+                <select id="counselling_type">
+                    <option value="Career">Career</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Academic">Academic</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Status:</label>
+                <select id="counselling_status">
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Done">Done</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <label>Details:</label>
+                <textarea id="counselling_text" rows="3">{{ erp_data.counselling or '' }}</textarea>
+            </div>
+            <button class="save-btn" onclick="saveData('counselling')">Save</button>
+            {% else %}
+            <div class="field-row"><label>Details:</label><span>{{ erp_data.counselling or 'Not Updated' }}</span></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function saveData(field) {
+            let value = '';
+            if(field === 'fee_payment') value = document.getElementById('fee_payment_select').value;
+            else if(field === 'attendance') {
+                let m = document.getElementById('attendance_month').value;
+                let s = document.getElementById('attendance_status').value;
+                let d = document.getElementById('attendance_text').value;
+                value = `${m} - ${s} | ${d}`;
+            }
+            else if(field === 'academic_progress') {
+                let t = document.getElementById('term_select').value;
+                let g = document.getElementById('grade_select').value;
+                let d = document.getElementById('academic_progress_text').value;
+                value = `${t} - Grade: ${g} | ${d}`;
+            }
+            else {
+                let el = document.getElementById(field + '_text');
+                value = el? el.value : '';
+            }
+
+            const data = {};
+            data[field] = value;
+
+            {% if is_admin and editing_student_id %}
+            const url = '/admin/update_student/{{ editing_student_id }}';
+            {% else %}
+            const url = '/admin/update_erp';
+            {% endif %}
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                alert('Saved successfully!');
+                location.reload();
+            } else {
+                alert('Error saving data');
+            }
+        }
+    </script>
+</body>
+</html>
