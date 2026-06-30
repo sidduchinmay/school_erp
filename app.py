@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename # ← FIXED THIS TYPO
+from flask import Flask, render_template, request, redirect, url_for, session
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -13,7 +14,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-this')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # <-- This line
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.secret_key = 'your-secret-key-here'
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
