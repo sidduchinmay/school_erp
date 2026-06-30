@@ -1,162 +1,74 @@
-import os
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename # ← FIXED THIS TYPO
 from flask import Flask, render_template, request, redirect, url_for, session
-
-db = SQLAlchemy()
-login_manager = LoginManager()
-login_manager.login_view = 'login'
+import sqlite3
+import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-this')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # <-- This line
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'your-secret-key-here'
-UPLOAD_FOLDER = 'static/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = 'replace-this-with-a-real-random-key-12345'  # Important for sessions
 
-db.init_app(app)
-login_manager.init_app(app)
+# ========== DATABASE HELPER ==========
+def get_db_connection():
+    conn = sqlite3.connect('school.db')
+    conn.row_factory = sqlite3.Row  # lets you access columns by name
+    return conn
 
-# -------------------- MODELS --------------------
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), nullable=False)
-    student = db.relationship('Student', backref='user', uselist=False)
+def check_user(username, password):
+    """
+    Check if user exists. 
+    TODO: Replace with real password hashing later.
+    """
+    conn = get_db_connection()
+    user = conn.execute(
+        'SELECT * FROM users WHERE username = ? AND password = ?', 
+        (username, password)
+    ).fetchone()
+    conn.close()
+    if user:
+        return dict(user)  # Convert Row to dict
+    return None
 
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    roll_no = db.Column(db.String(50), nullable=False)
-    photo = db.Column(db.String(200))
-    class_division = db.Column(db.String(50))
-    day_scholar_hostel = db.Column(db.String(20))
-    father_mobile = db.Column(db.String(15))
-    mother_mobile = db.Column(db.String(15))
-    emergency_number = db.Column(db.String(15))
-    email = db.Column(db.String(120))
-    aadhaar_number = db.Column(db.String(20))
-    siblings_in_school = db.Column(db.String(10))
-    current_address = db.Column(db.Text)
-    permanent_address = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+def get_student_by_id(user_id):
+    conn = get_db_connection()
+    student = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    return dict(student) if student else None
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
-
-# -------------------- ROUTES --------------------
+# ========== ROUTES ==========
 @app.route('/')
-def index():
-    if current_user.is_authenticated:
-        if current_user.role == 'admin':
-            return redirect(url_for('admin_dashboard'))
-        elif current_user.role == 'student':
-            return redirect(url_for('student_dashboard'))
+def home():
+    if 'user_id' in session:
+        return redirect(url_for('student_dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # check username/password from DB
-        user = check_user(request.form['username'], request.form['password'])
+        username = request.form['username']
+        password = request.form['password']
+        user = check_user(username, password)
+        
         if user:
             session['user_id'] = user['id']
-            session['role'] = user['role']  # 'admin' or 'student'
+            session['role'] = user['role']
+            session['name'] = user['name']
             return redirect(url_for('student_dashboard'))
         else:
-            return "Invalid login", 401
+            return render_template('login.html', error="Invalid username or password")
     
-    # GET request: just show login page
+    # GET request
     if 'user_id' in session:
         return redirect(url_for('student_dashboard'))
-    return render_template('login.html')  # ✅ render, don't redirect
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('Logged out successfully')
-    return redirect(url_for('login'))
-
-@app.route('/admin/dashboard')
-@login_required
-def admin_dashboard():
-    if current_user.role!= 'admin':
-        flash('Access denied')
-        return redirect(url_for('index'))
-    return render_template('admin_dashboard.html')
-
-@app.route('/admin/student-control', methods=['GET', 'POST'])
-@login_required
-def admin_student_page_control():
-    if current_user.role!= 'admin':
-        flash('Access denied')
-        return redirect(url_for('index'))
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        name = request.form.get('name')
-        roll_no = request.form.get('roll_no')
-        class_division = request.form.get('class_division')
-        day_scholar_hostel = request.form.get('day_scholar_hostel')
-        father_mobile = request.form.get('father_mobile')
-        mother_mobile = request.form.get('mother_mobile')
-        emergency_number = request.form.get('emergency_number')
-        email = request.form.get('email')
-        aadhaar_number = request.form.get('aadhaar_number')
-        siblings_in_school = request.form.get('siblings_in_school')
-        current_address = request.form.get('current_address')
-        permanent_address = request.form.get('permanent_address')
-        photo = request.files.get('photo')
-
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return redirect(url_for('admin_student_page_control'))
-
-        filename = None
-        if photo and photo.filename!= '' and allowed_file(photo.filename):
-            filename = secure_filename(photo.filename)
-            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-        new_user = User(username=username, password=generate_password_hash(password), role='student')
-        db.session.add(new_user)
-        db.session.flush()
-
-        new_student = Student(
-            name=name, roll_no=roll_no, photo=filename, class_division=class_division,
-            day_scholar_hostel=day_scholar_hostel, father_mobile=father_mobile,
-            mother_mobile=mother_mobile, emergency_number=emergency_number, email=email,
-            aadhaar_number=aadhaar_number, siblings_in_school=siblings_in_school,
-            current_address=current_address, permanent_address=permanent_address,
-            user_id=new_user.id
-        )
-        db.session.add(new_student)
-        db.session.commit()
-        flash('Student added successfully')
-        return redirect(url_for('admin_student_page_control'))
-
-    students = Student.query.all()
-    return render_template('admin_student_page_control.html', students=students)
-
-
+    return render_template('login.html')
 
 @app.route('/student/dashboard')
 def student_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Fetch student data from DB
-    student = get_student_by_id(session['user_id'])  # your DB function
+    student = get_student_by_id(session['user_id'])
+    if not student:
+        session.clear()
+        return redirect(url_for('login'))
+    
     is_admin = session.get('role') == 'admin'
     
     return render_template('student_dashboard.html', 
@@ -168,23 +80,18 @@ def update_erp_data():
     if session.get('role') != 'admin':
         return "Unauthorized", 403
     
-    data = request.json  # table data from JS
-    # Save to DB here
-    return {"status": "success"}
+    data = request.json
+    # TODO: Save 'data' to DB here
+    print("Admin saved:", data)  # For Render logs
+    
+    return {"status": "success", "message": "Data updated"}
 
-# -------------------- CREATE DB + ADMIN --------------------
-def create_admin():
-    with app.app_context():
-        db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', password=generate_password_hash('admin123'), role='admin')
-            db.session.add(admin)
-            db.session.commit()
-            print('Default admin created: username=admin, password=admin123')
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
-# Run this on startup for Render/Gunicorn
-with app.app_context():
-    create_admin()
-
+# ========== RUN ==========
 if __name__ == '__main__':
-    app.run(debug=True)
+    # For local testing only. Render uses gunicorn
+    app.run(debug=True, host='0.0.0.0', port=5000)
