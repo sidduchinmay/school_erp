@@ -1,42 +1,39 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
-import os
 
 app = Flask(__name__)
-app.secret_key = 'replace-this-with-a-real-random-key-12345'  # Important for sessions
+app.secret_key = 'aps-erp-secret-key-2025-26' # Change this
 
-# ========== DATABASE HELPER ==========
 def get_db_connection():
     conn = sqlite3.connect('school.db')
-    conn.row_factory = sqlite3.Row  # lets you access columns by name
+    conn.row_factory = sqlite3.Row
     return conn
 
-def check_user(username, password):
-    """
-    Check if user exists. 
-    TODO: Replace with real password hashing later.
-    """
+def check_user(username, password, role):
     conn = get_db_connection()
     user = conn.execute(
-        'SELECT * FROM users WHERE username = ? AND password = ?', 
-        (username, password)
+        'SELECT * FROM users WHERE username =? AND password =? AND role =?',
+        (username, password, role)
     ).fetchone()
     conn.close()
-    if user:
-        return dict(user)  # Convert Row to dict
-    return None
+    return dict(user) if user else None
 
-def get_student_by_id(user_id):
+def get_user_by_id(user_id):
     conn = get_db_connection()
-    student = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    user = conn.execute('SELECT * FROM users WHERE id =?', (user_id,)).fetchone()
     conn.close()
-    return dict(student) if student else None
+    return dict(user) if user else None
 
-# ========== ROUTES ==========
+def get_all_erp_data():
+    conn = get_db_connection()
+    data = conn.execute('SELECT * FROM erp_data WHERE id = 1').fetchone()
+    conn.close()
+    return dict(data) if data else {}
+
 @app.route('/')
 def home():
     if 'user_id' in session:
-        return redirect(url_for('student_dashboard'))
+        return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -44,54 +41,62 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = check_user(username, password)
-        
+        role = request.form['role'] # admin, student, teacher
+
+        user = check_user(username, password, role)
         if user:
             session['user_id'] = user['id']
             session['role'] = user['role']
             session['name'] = user['name']
-            return redirect(url_for('student_dashboard'))
+            return redirect(url_for('dashboard'))
         else:
-            return render_template('login.html', error="Invalid username or password")
-    
-    # GET request
+            return render_template('login.html', error="Invalid credentials or role")
+
     if 'user_id' in session:
-        return redirect(url_for('student_dashboard'))
+        return redirect(url_for('dashboard'))
     return render_template('login.html')
 
-@app.route('/student/dashboard')
-def student_dashboard():
+@app.route('/dashboard')
+def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    student = get_student_by_id(session['user_id'])
-    if not student:
-        session.clear()
-        return redirect(url_for('login'))
-    
+
+    user = get_user_by_id(session['user_id'])
+    erp_data = get_all_erp_data()
     is_admin = session.get('role') == 'admin'
-    
-    return render_template('student_dashboard.html', 
-                           student=student, 
+
+    return render_template('student_dashboard.html',
+                           user=user,
+                           erp_data=erp_data,
                            is_admin=is_admin)
 
-@app.route('/admin/update_erp_data', methods=['POST'])
-def update_erp_data():
-    if session.get('role') != 'admin':
+@app.route('/admin/update_erp', methods=['POST'])
+def update_erp():
+    if session.get('role')!= 'admin':
         return "Unauthorized", 403
-    
+
     data = request.json
-    # TODO: Save 'data' to DB here
-    print("Admin saved:", data)  # For Render logs
-    
-    return {"status": "success", "message": "Data updated"}
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE erp_data SET
+        fee_payment=?, attendance=?, academic_progress=?, accolades=?,
+        applications=?, participation=?, schedules=?, view_calendar=?, downloads=?,
+        discipline=?, parents_meetings=?, counselling=?
+        WHERE id = 1
+    ''', (
+        data.get('fee_payment'), data.get('attendance'), data.get('academic_progress'),
+        data.get('accolades'), data.get('applications'), data.get('participation'),
+        data.get('schedules'), data.get('view_calendar'), data.get('downloads'),
+        data.get('discipline'), data.get('parents_meetings'), data.get('counselling')
+    ))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ========== RUN ==========
 if __name__ == '__main__':
-    # For local testing only. Render uses gunicorn
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)

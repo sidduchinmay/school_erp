@@ -1,158 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Dashboard - ERP APS 2025-26</title>
+    <title>ERP Dashboard - APS 2025-26</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; font-size: 12px; }
-        th, td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
-        th { background: #f2f2f2; font-weight: bold; }
-        .profile-section { display: flex; gap: 20px; margin-top: 30px; }
-        .profile-box { border: 1px solid #333; padding: 10px; width: 30%; }
-        .admin-only { background: #fff3cd; }
-        .edit-btn { margin-top: 10px; }
+        body { font-family: Arial; margin: 0; padding: 15px; background: #f5f5f5; }
+       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+       .profile { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background: #1a73e8; color: white; font-size: 11px; }
+       .section-title { background: #e8f0fe; font-weight: bold; }
+        input[type="text"] { width: 95%; border: none; background: transparent; }
+       .admin-controls { margin: 15px 0; }
+       .btn { padding: 8px 16px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer; }
+       .btn:hover { background: #2d8e47; }
+       .readonly input { pointer-events: none; background: #f9f9f9; }
     </style>
 </head>
 <body>
-    <h2>Welcome, {{ student.name }} | Class: {{ student.class_division }}</h2>
-    
+    <div class="header">
+        <h2>APS ERP 2025-26 - Welcome {{ user.name }} [{{ user.role|upper }}]</h2>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <div class="profile">
+        <strong>Profile:</strong> {{ user.name }} | <strong>Class:</strong> {{ user.class_division }} | <strong>Role:</strong> {{ user.role }}
+    </div>
+
     {% if is_admin %}
-    <div class="admin-only">
-        <strong>Admin Mode:</strong> You can edit all fields. 
-        <button onclick="enableEdit()">Enable Edit</button>
-        <button onclick="saveAll()">Save Changes</button>
+    <div class="admin-controls">
+        <button class="btn" onclick="saveData()">Save All Changes</button>
+        <span id="save-status"></span>
     </div>
     {% endif %}
 
-    <table id="erp-table">
-        <thead>
-            <tr>
-                <th>HOME</th>
-                <th>Fee Payment</th>
-                <th>ATTENDANCE</th>
-                <th>Academic Progress</th>
-                <th>Accolades/Certificate</th>
-                <th>Applications / Apply Online</th>
-                <th>Participation in Co/Extra Curricular</th>
-                <th>Schedules and Time Tables</th>
-                <th>View Calendar of Events</th>
-                <th>View / Downloads</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">Arrears</td>
-                <td contenteditable="{{ is_admin }}">Absence Details</td>
-                <td contenteditable="{{ is_admin }}">Entrance / Counselling</td>
-                <td contenteditable="{{ is_admin }}">School Level</td>
-                <td contenteditable="{{ is_admin }}">Gavel Club</td>
-                <td contenteditable="{{ is_admin }}">Talent Hunt</td>
-                <td contenteditable="{{ is_admin }}">Syllabus Schedule</td>
-                <td contenteditable="{{ is_admin }}">March</td>
-                <td contenteditable="{{ is_admin }}">Monthly Plan</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">Term -1</td>
-                <td contenteditable="{{ is_admin }}">Previous Years Attendance</td>
-                <td contenteditable="{{ is_admin }}">Diagnostic Test</td>
-                <td contenteditable="{{ is_admin }}">Inter-school</td>
-                <td contenteditable="{{ is_admin }}">Talent Hunt</td>
-                <td contenteditable="{{ is_admin }}">Sports</td>
-                <td contenteditable="{{ is_admin }}">Exam Schedule</td>
-                <td contenteditable="{{ is_admin }}">April</td>
-                <td contenteditable="{{ is_admin }}">Year Plan</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">Term -2</td>
-                <td contenteditable="{{ is_admin }}">Month wise</td>
-                <td contenteditable="{{ is_admin }}">MT-1</td>
-                <td contenteditable="{{ is_admin }}">State</td>
-                <td contenteditable="{{ is_admin }}">Sports</td>
-                <td contenteditable="{{ is_admin }}">Gavel Club</td>
-                <td contenteditable="{{ is_admin }}">TH Activity Schedule</td>
-                <td contenteditable="{{ is_admin }}">May</td>
-                <td contenteditable="{{ is_admin }}">Exam Schedules</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">Programme Fees</td>
-                <td contenteditable="{{ is_admin }}">Exam - Attendance Total</td>
-                <td contenteditable="{{ is_admin }}">MT-2</td>
-                <td contenteditable="{{ is_admin }}">National</td>
-                <td contenteditable="{{ is_admin }}">Photography</td>
-                <td contenteditable="{{ is_admin }}">Photograph y</td>
-                <td contenteditable="{{ is_admin }}">Sports Schedule</td>
-                <td contenteditable="{{ is_admin }}">June</td>
-                <td contenteditable="{{ is_admin }}">Activity Schedule Report Card</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">Mandatory Min. Attendance</td>
-                <td contenteditable="{{ is_admin }}">MT-3</td>
-                <td contenteditable="{{ is_admin }}">International</td>
-                <td contenteditable="{{ is_admin }}">Chess</td>
-                <td contenteditable="{{ is_admin }}">Leadership and Communication</td>
-                <td contenteditable="{{ is_admin }}">Pratibha Karanji</td>
-                <td contenteditable="{{ is_admin }}">July</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td><td></td>
-                <td contenteditable="{{ is_admin }}">MT-4</td>
-                <td contenteditable="{{ is_admin }}">Sports & Yoga</td>
-                <td contenteditable="{{ is_admin }}">Yoga</td>
-                <td contenteditable="{{ is_admin }}">Chess</td>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">August</td>
-                <td contenteditable="{{ is_admin }}">Results</td>
-            </tr>
-            <tr>
-                <td></td><td></td>
-                <td contenteditable="{{ is_admin }}">MT-5</td>
-                <td contenteditable="{{ is_admin }}">Literary Art, and Cultural</td>
-                <td contenteditable="{{ is_admin }}">Dance / Music</td>
-                <td contenteditable="{{ is_admin }}">Yoga</td>
-                <td></td>
-                <td contenteditable="{{ is_admin }}">September</td>
-                <td contenteditable="{{ is_admin }}">Admission Doc Submission Status</td>
-            </tr>
-        </tbody>
+    <table id="erp-table" class="{{ 'readonly' if not is_admin else '' }}">
+        <tr>
+            <th>HOME</th><th>Fee Payment</th><th>ATTENDANCE</th><th>Academic Progress</th><th>Accolades/Certificate</th>
+            <th>Applications/Apply Online</th><th>Participation in Co/Extra Curricular</th><th>Schedules and Time Tables</th>
+            <th>View Calendar of Events</th><th>View / Downloads</th>
+        </tr>
+        <tr>
+            <td></td><td><input type="text" value="{{ erp_data.fee_payment or 'Arrears, Term-1, Term-2, Programme Fees' }}"></td>
+            <td><input type="text" value="{{ erp_data.attendance or 'Absence Details, Previous Years Attendance, Month wise' }}"></td>
+            <td><input type="text" value="{{ erp_data.academic_progress or 'Entrance/Counselling, Diagnostic Test, MT-1 to MT-6' }}"></td>
+            <td><input type="text" value="{{ erp_data.accolades or 'School Level, Inter-school, State, National, International' }}"></td>
+            <td><input type="text" value="{{ erp_data.applications or 'Gavel Club, Talent Hunt, Sports, Photography, Chess, Yoga' }}"></td>
+            <td><input type="text" value="{{ erp_data.participation or 'Sports, Leadership, Yoga, Dance/Music, Social Work, NCC' }}"></td>
+            <td><input type="text" value="{{ erp_data.schedules or 'Syllabus, Exam Schedule, Activity Schedule, Sports Pratibha' }}"></td>
+            <td><input type="text" value="{{ erp_data.view_calendar or 'March to February' }}"></td>
+            <td><input type="text" value="{{ erp_data.downloads or 'Monthly Plan, Year Plan, Exam Schedules, Report Card, Results' }}"></td>
+        </tr>
+        <tr class="section-title">
+            <td colspan="10">Discipline & Other Records</td>
+        </tr>
+        <tr>
+            <td><strong>Discipline</strong></td>
+            <td colspan="3"><input type="text" value="{{ erp_data.discipline or 'Incidents, White/ Yellow/ Red Report Card, Actions Taken' }}"></td>
+            <td><strong>Parent's Meetings</strong></td>
+            <td colspan="2"><input type="text" value="{{ erp_data.parents_meetings or '' }}"></td>
+            <td><strong>Counselling Attended</strong></td>
+            <td colspan="2"><input type="text" value="{{ erp_data.counselling or '' }}"></td>
+        </tr>
     </table>
 
-    <div class="profile-section">
-        <div class="profile-box">
-            <strong>Photo</strong><br>
-            <img src="{{ student.photo_url or '/static/default.png' }}" width="100">
-        </div>
-        <div class="profile-box">
-            <strong>Profile</strong><br>
-            Name: {{ student.name }}<br>
-            Class & Division: {{ student.class_division }}<br>
-            Day Scholar / Hostel: {{ student.scholar_type }}<br>
-            Father's Mobile: {{ student.father_mobile }}<br>
-            Mother's Mobile: {{ student.mother_mobile }}<br>
-            Emergency Number/s: {{ student.emergency_no }}
-        </div>
-        <div class="profile-box">
-            <strong>Attendance Graph</strong><br>
-            <canvas id="attendanceChart"></canvas>
-        </div>
-    </div>
-
     <script>
-        function enableEdit() {
-            document.querySelectorAll('[contenteditable="True"]').forEach(el => {
-                el.style.background = '#ffffcc';
+        function saveData() {
+            if (!{{ 'true' if is_admin else 'false' }}) return;
+
+            const rows = document.querySelectorAll('#erp-table tr');
+            const data = {
+                fee_payment: rows[1].cells[1].querySelector('input').value,
+                attendance: rows[1].cells[2].querySelector('input').value,
+                academic_progress: rows[1].cells[3].querySelector('input').value,
+                accolades: rows[1].cells[4].querySelector('input').value,
+                applications: rows[1].cells[5].querySelector('input').value,
+                participation: rows[1].cells[6].querySelector('input').value,
+                schedules: rows[1].cells[7].querySelector('input').value,
+                view_calendar: rows[1].cells[8].querySelector('input').value,
+                downloads: rows[1].cells[9].querySelector('input').value,
+                discipline: rows[3].cells[1].querySelector('input').value,
+                parents_meetings: rows[3].cells[3].querySelector('input').value,
+                counselling: rows[3].cells[5].querySelector('input').value
+            };
+
+            fetch('/admin/update_erp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(res => res.json()).then(res => {
+                document.getElementById('save-status').innerText = 'Saved!';
+                setTimeout(() => document.getElementById('save-status').innerText = '', 2000);
             });
-        }
-        
-        function saveAll() {
-            // POST to /admin/update_erp_data with table data
-            alert('Save logic goes here - send to Flask route');
         }
     </script>
 </body>
