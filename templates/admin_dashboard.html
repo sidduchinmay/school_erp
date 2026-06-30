@@ -1,16 +1,72 @@
-{% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
-{% block content %}
-<h2 class="mb-4">Admin Dashboard</h2>
-<div class="row">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Student Management</h5>
-                <p class="card-text">Add, view and manage student profiles</p>
-                <a href="{{ url_for('admin_student_page_control') }}" class="btn btn-primary">Manage Students</a>
-            </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>APS ERP - Admin</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f9; margin: 0; }
+      .header { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; }
+      .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+      .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .btn { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+      .btn-danger { background: #e74c3c; }
+       table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+       th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+       th { background: #ecf0f1; }
+       input[type="file"] { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APS ERP Admin Panel</h1>
+        <div>
+            <span>{{ user.name }}</span>
+            <a href="/logout" class="btn btn-danger">Logout</a>
         </div>
     </div>
-</div>
-{% endblock %}
+    <div class="container">
+        <div class="card">
+            <h3>Bulk Upload Students</h3>
+            <p>Upload CSV with columns: username,password,name,class_division,roll_no</p>
+            <input type="file" id="csvFile" accept=".csv">
+            <button class="btn" onclick="uploadCSV()">Upload Students</button>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <div class="card">
+            <h3>All Students - Click to Edit Individual Data</h3>
+            <table>
+                <tr>
+                    <th>Roll No</th><th>Name</th><th>Class</th><th>Username</th><th>Action</th>
+                </tr>
+                {% for s in students %}
+                <tr>
+                    <td>{{ s.roll_no }}</td>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.class_division }}</td>
+                    <td>{{ s.username }}</td>
+                    <td><a href="/admin/student/{{ s.id }}" class="btn">Edit ERP Data</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function uploadCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            if(!file) return alert('Select a CSV file');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/admin/bulk_upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('uploadStatus').innerHTML =
+                res.ok? `<p style="color:green">Success! Added ${data.added} students</p>` :
+                         `<p style="color:red">Error: ${data.error}</p>`;
+            if(res.ok) setTimeout(() => location.reload(), 1500);
+        }
+    </script>
+</body>
+</html>

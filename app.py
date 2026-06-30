@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import os
+import csv
+from io import StringIO
 
 app = Flask(__name__)
 app.secret_key = 'aps-erp-secret-key-2025-26'
-
 DB_PATH = 'school.db'
 
 def init_db():
@@ -16,25 +17,24 @@ def init_db():
             password TEXT NOT NULL,
             role TEXT NOT NULL,
             name TEXT NOT NULL,
-            class_division TEXT
+            class_division TEXT,
+            roll_no TEXT
         )
     ''')
     conn.execute('''
-        CREATE TABLE IF NOT EXISTS erp_data (
-            id INTEGER PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS student_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
             fee_payment TEXT, attendance TEXT, academic_progress TEXT, accolades TEXT,
             applications TEXT, participation TEXT, schedules TEXT, view_calendar TEXT, downloads TEXT,
-            discipline TEXT, parents_meetings TEXT, counselling TEXT
+            discipline TEXT, parents_meetings TEXT, counselling TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id)
         )
     ''')
     conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('admin', 'admin123', 'admin', 'Principal', 'All')")
-    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('student1', 'pass123', 'student', 'John Doe', '10-A')")
-    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('teacher1', 'teach123', 'teacher', 'Mrs. Sharma', 'Staff')")
-    conn.execute("INSERT OR IGNORE INTO erp_data (id) VALUES (1)")
     conn.commit()
     conn.close()
 
-# Run this when app starts
 init_db()
 
 def get_db_connection():
@@ -44,10 +44,7 @@ def get_db_connection():
 
 def check_user(username, password, role):
     conn = get_db_connection()
-    user = conn.execute(
-        'SELECT * FROM users WHERE username =? AND password =? AND role =?',
-        (username, password, role)
-    ).fetchone()
+    user = conn.execute('SELECT * FROM users WHERE username =? AND password =? AND role =?',(username, password, role)).fetchone()
     conn.close()
     return dict(user) if user else None
 
@@ -57,11 +54,17 @@ def get_user_by_id(user_id):
     conn.close()
     return dict(user) if user else None
 
-def get_all_erp_data():
+def get_student_data(user_id):
     conn = get_db_connection()
-    data = conn.execute('SELECT * FROM erp_data WHERE id = 1').fetchone()
+    data = conn.execute('SELECT * FROM student_data WHERE user_id =?', (user_id,)).fetchone()
     conn.close()
     return dict(data) if data else {}
+
+def get_all_students():
+    conn = get_db_connection()
+    students = conn.execute("SELECT * FROM users WHERE role='student' ORDER BY class_division, roll_no").fetchall()
+    conn.close()
+    return [dict(s) for s in students]
 
 @app.route('/')
 def home():
@@ -83,8 +86,6 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             return render_template('login.html', error="Invalid credentials or role")
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -92,31 +93,76 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user = get_user_by_id(session['user_id'])
-    erp_data = get_all_erp_data()
     is_admin = session.get('role') == 'admin'
-    return render_template('student_dashboard.html', user=user, erp_data=erp_data, is_admin=is_admin)
 
-@app.route('/admin/update_erp', methods=['POST'])
-def update_erp():
+    if is_admin:
+        students = get_all_students()
+        return render_template('admin_dashboard.html', user=user, students=students)
+    else:
+        erp_data = get_student_data(session['user_id'])
+        return render_template('student_dashboard.html', user=user, erp_data=erp_data, is_admin=False)
+
+@app.route('/admin/student/<int:student_id>')
+def edit_student(student_id):
+    if session.get('role')!= 'admin':
+        return "Unauthorized", 403
+    student = get_user_by_id(student_id)
+    erp_data = get_student_data(student_id)
+    return render_template('student_dashboard.html', user=student, erp_data=erp_data, is_admin=True, editing_student_id=student_id)
+
+@app.route('/admin/update_student/<int:student_id>', methods=['POST'])
+def update_student(student_id):
     if session.get('role')!= 'admin':
         return "Unauthorized", 403
     data = request.json
     conn = get_db_connection()
+    conn.execute('INSERT OR IGNORE INTO student_data (user_id) VALUES (?)', (student_id,))
     conn.execute('''
-        UPDATE erp_data SET
+        UPDATE student_data SET
         fee_payment=?, attendance=?, academic_progress=?, accolades=?,
         applications=?, participation=?, schedules=?, view_calendar=?, downloads=?,
         discipline=?, parents_meetings=?, counselling=?
-        WHERE id = 1
+        WHERE user_id =?
     ''', (
         data.get('fee_payment'), data.get('attendance'), data.get('academic_progress'),
         data.get('accolades'), data.get('applications'), data.get('participation'),
         data.get('schedules'), data.get('view_calendar'), data.get('downloads'),
-        data.get('discipline'), data.get('parents_meetings'), data.get('counselling')
+        data.get('discipline'), data.get('parents_meetings'), data.get('counselling'),
+        student_id
     ))
     conn.commit()
     conn.close()
     return {"status": "success"}
+
+@app.route('/admin/bulk_upload', methods=['POST'])
+def bulk_upload():
+    if session.get('role')!= 'admin':
+        return "Unauthorized", 403
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    stream = StringIO(file.stream.read().decode("UTF8"), newline=None)
+    csv_input = csv.DictReader(stream)
+
+    conn = get_db_connection()
+    count = 0
+    for row in csv_input:
+        try:
+            conn.execute('''
+                INSERT OR IGNORE INTO users (username, password, role, name, class_division, roll_no)
+                VALUES (?,?, 'student',?,?,?)
+            ''', (row['username'], row['password'], row['name'], row['class_division'], row['roll_no']))
+            count += 1
+        except Exception as e:
+            print(f"Error on row {row}: {e}")
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success", "added": count})
 
 @app.route('/logout')
 def logout():
