@@ -11,7 +11,7 @@ login_manager.login_view = 'login'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-this')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # <-- This line
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -146,17 +146,29 @@ def admin_student_page_control():
     students = Student.query.all()
     return render_template('admin_student_page_control.html', students=students)
 
+
+
 @app.route('/student/dashboard')
-@login_required
 def student_dashboard():
-    if current_user.role!= 'student':
-        flash('Access denied')
-        return redirect(url_for('index'))
-    student = Student.query.filter_by(user_id=current_user.id).first()
-    if not student:
-        flash('Student profile not found')
-        return redirect(url_for('logout'))
-    return render_template('student_dashboard.html', student=student)
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    # Fetch student data from DB
+    student = get_student_by_id(session['user_id'])  # your DB function
+    is_admin = session.get('role') == 'admin'
+    
+    return render_template('student_dashboard.html', 
+                           student=student, 
+                           is_admin=is_admin)
+
+@app.route('/admin/update_erp_data', methods=['POST'])
+def update_erp_data():
+    if session.get('role') != 'admin':
+        return "Unauthorized", 403
+    
+    data = request.json  # table data from JS
+    # Save to DB here
+    return {"status": "success"}
 
 # -------------------- CREATE DB + ADMIN --------------------
 def create_admin():

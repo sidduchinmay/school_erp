@@ -1,78 +1,159 @@
-{% extends "base.html" %}
-{% block title %}Student Dashboard{% endblock %}
-{% block content %}
-<h2 class="mb-4">Student Dashboard</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard - ERP APS 2025-26</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; font-size: 12px; }
+        th, td { border: 1px solid #333; padding: 6px; text-align: left; vertical-align: top; }
+        th { background: #f2f2f2; font-weight: bold; }
+        .profile-section { display: flex; gap: 20px; margin-top: 30px; }
+        .profile-box { border: 1px solid #333; padding: 10px; width: 30%; }
+        .admin-only { background: #fff3cd; }
+        .edit-btn { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Welcome, {{ student.name }} | Class: {{ student.class_division }}</h2>
+    
+    {% if is_admin %}
+    <div class="admin-only">
+        <strong>Admin Mode:</strong> You can edit all fields. 
+        <button onclick="enableEdit()">Enable Edit</button>
+        <button onclick="saveAll()">Save Changes</button>
+    </div>
+    {% endif %}
 
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                {% if student.photo %}
-                <img src="{{ url_for('static', filename='uploads/' + student.photo) }}" 
-                     class="img-fluid rounded mb-3" style="max-height: 200px;" alt="Student Photo">
-                {% else %}
-                <div class="bg-secondary text-white p-5 mb-3 rounded">No Photo</div>
-                {% endif %}
-                <h4>{{ student.name }}</h4>
-                <p class="text-muted">{{ student.class_division }}</p>
-            </div>
+    <table id="erp-table">
+        <thead>
+            <tr>
+                <th>HOME</th>
+                <th>Fee Payment</th>
+                <th>ATTENDANCE</th>
+                <th>Academic Progress</th>
+                <th>Accolades/Certificate</th>
+                <th>Applications / Apply Online</th>
+                <th>Participation in Co/Extra Curricular</th>
+                <th>Schedules and Time Tables</th>
+                <th>View Calendar of Events</th>
+                <th>View / Downloads</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">Arrears</td>
+                <td contenteditable="{{ is_admin }}">Absence Details</td>
+                <td contenteditable="{{ is_admin }}">Entrance / Counselling</td>
+                <td contenteditable="{{ is_admin }}">School Level</td>
+                <td contenteditable="{{ is_admin }}">Gavel Club</td>
+                <td contenteditable="{{ is_admin }}">Talent Hunt</td>
+                <td contenteditable="{{ is_admin }}">Syllabus Schedule</td>
+                <td contenteditable="{{ is_admin }}">March</td>
+                <td contenteditable="{{ is_admin }}">Monthly Plan</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">Term -1</td>
+                <td contenteditable="{{ is_admin }}">Previous Years Attendance</td>
+                <td contenteditable="{{ is_admin }}">Diagnostic Test</td>
+                <td contenteditable="{{ is_admin }}">Inter-school</td>
+                <td contenteditable="{{ is_admin }}">Talent Hunt</td>
+                <td contenteditable="{{ is_admin }}">Sports</td>
+                <td contenteditable="{{ is_admin }}">Exam Schedule</td>
+                <td contenteditable="{{ is_admin }}">April</td>
+                <td contenteditable="{{ is_admin }}">Year Plan</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">Term -2</td>
+                <td contenteditable="{{ is_admin }}">Month wise</td>
+                <td contenteditable="{{ is_admin }}">MT-1</td>
+                <td contenteditable="{{ is_admin }}">State</td>
+                <td contenteditable="{{ is_admin }}">Sports</td>
+                <td contenteditable="{{ is_admin }}">Gavel Club</td>
+                <td contenteditable="{{ is_admin }}">TH Activity Schedule</td>
+                <td contenteditable="{{ is_admin }}">May</td>
+                <td contenteditable="{{ is_admin }}">Exam Schedules</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">Programme Fees</td>
+                <td contenteditable="{{ is_admin }}">Exam - Attendance Total</td>
+                <td contenteditable="{{ is_admin }}">MT-2</td>
+                <td contenteditable="{{ is_admin }}">National</td>
+                <td contenteditable="{{ is_admin }}">Photography</td>
+                <td contenteditable="{{ is_admin }}">Photograph y</td>
+                <td contenteditable="{{ is_admin }}">Sports Schedule</td>
+                <td contenteditable="{{ is_admin }}">June</td>
+                <td contenteditable="{{ is_admin }}">Activity Schedule Report Card</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">Mandatory Min. Attendance</td>
+                <td contenteditable="{{ is_admin }}">MT-3</td>
+                <td contenteditable="{{ is_admin }}">International</td>
+                <td contenteditable="{{ is_admin }}">Chess</td>
+                <td contenteditable="{{ is_admin }}">Leadership and Communication</td>
+                <td contenteditable="{{ is_admin }}">Pratibha Karanji</td>
+                <td contenteditable="{{ is_admin }}">July</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td><td></td>
+                <td contenteditable="{{ is_admin }}">MT-4</td>
+                <td contenteditable="{{ is_admin }}">Sports & Yoga</td>
+                <td contenteditable="{{ is_admin }}">Yoga</td>
+                <td contenteditable="{{ is_admin }}">Chess</td>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">August</td>
+                <td contenteditable="{{ is_admin }}">Results</td>
+            </tr>
+            <tr>
+                <td></td><td></td>
+                <td contenteditable="{{ is_admin }}">MT-5</td>
+                <td contenteditable="{{ is_admin }}">Literary Art, and Cultural</td>
+                <td contenteditable="{{ is_admin }}">Dance / Music</td>
+                <td contenteditable="{{ is_admin }}">Yoga</td>
+                <td></td>
+                <td contenteditable="{{ is_admin }}">September</td>
+                <td contenteditable="{{ is_admin }}">Admission Doc Submission Status</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="profile-section">
+        <div class="profile-box">
+            <strong>Photo</strong><br>
+            <img src="{{ student.photo_url or '/static/default.png' }}" width="100">
+        </div>
+        <div class="profile-box">
+            <strong>Profile</strong><br>
+            Name: {{ student.name }}<br>
+            Class & Division: {{ student.class_division }}<br>
+            Day Scholar / Hostel: {{ student.scholar_type }}<br>
+            Father's Mobile: {{ student.father_mobile }}<br>
+            Mother's Mobile: {{ student.mother_mobile }}<br>
+            Emergency Number/s: {{ student.emergency_no }}
+        </div>
+        <div class="profile-box">
+            <strong>Attendance Graph</strong><br>
+            <canvas id="attendanceChart"></canvas>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5>Student Information</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <tr>
-                        <td><strong>Roll No</strong></td>
-                        <td>{{ student.roll_no }}</td>
-                        <td><strong>Day Scholar/Hostel</strong></td>
-                        <td>{{ student.day_scholar_hostel }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Father Mobile</strong></td>
-                        <td>{{ student.father_mobile }}</td>
-                        <td><strong>Mother Mobile</strong></td>
-                        <td>{{ student.mother_mobile }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Emergency Number</strong></td>
-                        <td>{{ student.emergency_number }}</td>
-                        <td><strong>Email</strong></td>
-                        <td>{{ student.email }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Aadhaar Number</strong></td>
-                        <td>{{ student.aadhaar_number }}</td>
-                        <td><strong>Siblings in School</strong></td>
-                        <td>{{ student.siblings_in_school }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Current Address</strong></td>
-                        <td colspan="3">{{ student.current_address }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Permanent Address</strong></td>
-                        <td colspan="3">{{ student.permanent_address }}</td>
-                    </tr>
-                </table>
-                
-                <div class="mt-3">
-                    <button class="btn btn-success" onclick="window.print()">Print ID Card</button>
-                    <a href="#" class="btn btn-primary">Download Details PDF</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-@media print {
-    .navbar, .btn { display: none !important; }
-    .card { border: none !important; }
-}
-</style>
-{% endblock %}
+    <script>
+        function enableEdit() {
+            document.querySelectorAll('[contenteditable="True"]').forEach(el => {
+                el.style.background = '#ffffcc';
+            });
+        }
+        
+        function saveAll() {
+            // POST to /admin/update_erp_data with table data
+            alert('Save logic goes here - send to Flask route');
+        }
+    </script>
+</body>
+</html>
