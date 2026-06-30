@@ -4,13 +4,14 @@ import os
 import csv
 from io import StringIO
 
-if os.path.exists('school.db'):
-    os.remove('school.db')  # Delete old DB
 app = Flask(__name__)
 app.secret_key = 'aps-erp-secret-key-2025-26'
-DB_PATH = 'school.db'
+
+# Use /tmp on Render - always writable
+DB_PATH = '/tmp/school.db'
 
 def init_db():
+    print("Starting init_db...")
     conn = sqlite3.connect(DB_PATH)
     conn.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -19,16 +20,10 @@ def init_db():
             password TEXT NOT NULL,
             role TEXT NOT NULL,
             name TEXT NOT NULL,
-            class_division TEXT
+            class_division TEXT,
+            roll_no TEXT
         )
     ''')
-
-    # Add roll_no column if it doesn't exist - fixes your error
-    try:
-        conn.execute('ALTER TABLE users ADD COLUMN roll_no TEXT')
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-
     conn.execute('''
         CREATE TABLE IF NOT EXISTS student_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +37,10 @@ def init_db():
     conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('admin', 'admin123', 'admin', 'Principal', 'All')")
     conn.commit()
     conn.close()
+    print("init_db complete. Tables created.")
+
+# Force run on import - works with gunicorn on Render
+init_db()
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -68,7 +67,6 @@ def get_student_data(user_id):
 
 def get_all_students():
     conn = get_db_connection()
-    # Don't order by roll_no yet - column might not exist
     students = conn.execute("SELECT * FROM users WHERE role='student' ORDER BY class_division").fetchall()
     conn.close()
     return [dict(s) for s in students]
