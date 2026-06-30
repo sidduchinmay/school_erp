@@ -66,19 +66,20 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            flash('Logged in successfully')
-            return redirect(url_for('index'))
+        # check username/password from DB
+        user = check_user(request.form['username'], request.form['password'])
+        if user:
+            session['user_id'] = user['id']
+            session['role'] = user['role']  # 'admin' or 'student'
+            return redirect(url_for('student_dashboard'))
         else:
-            flash('Invalid username or password')
-    return render_template('login.html')
+            return "Invalid login", 401
+    
+    # GET request: just show login page
+    if 'user_id' in session:
+        return redirect(url_for('student_dashboard'))
+    return render_template('login.html')  # ✅ render, don't redirect
 
 @app.route('/logout')
 @login_required
