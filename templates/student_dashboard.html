@@ -22,7 +22,10 @@
      .field-row span { flex: 1; }
      .field-row select,.field-row input,.field-row textarea { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px; }
      .save-btn { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-     .dropdown-group { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+     .fee-structure { background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
+     .fee-row { display: flex; gap: 15px; margin-bottom: 10px; }
+     .fee-col { flex: 1; }
+     .amount { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -61,30 +64,52 @@
         <div id="fee_payment" class="tab-content active">
             <h3>Fee Payment</h3>
             {% if is_admin %}
-            <div class="field-row">
-                <label>Category:</label>
-                <select id="fee_payment_category">
-                    <option value="Arrears">Arrears</option>
-                    <option value="Term-1">Term-1</option>
-                    <option value="Term-2">Term-2</option>
-                    <option value="Programme Fees">Programme Fees</option>
-                </select>
+            <div class="fee-structure">
+                <div class="fee-row">
+                    <div class="fee-col">
+                        <label>Academic Year:</label>
+                        <select id="fee_year">
+                            <option value="2025-26">2025-26</option>
+                            <option value="2024-25">2024-25</option>
+                        </select>
+                    </div>
+                    <div class="fee-col">
+                        <label>Term:</label>
+                        <select id="fee_term">
+                            <option value="Arrears">Arrears</option>
+                            <option value="Term-1">Term-1</option>
+                            <option value="Term-2">Term-2</option>
+                            <option value="Programme Fees">Programme Fees</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fee-row">
+                    <div class="fee-col">
+                        <label>Status:</label>
+                        <select id="fee_status">
+                            <option value="Paid">Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Partial">Partial</option>
+                        </select>
+                    </div>
+                    <div class="fee-col">
+                        <label>Outstanding Amount:</label>
+                        <input type="number" id="fee_outstanding" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>Remarks:</label>
+                    <textarea id="fee_payment_text" rows="2"></textarea>
+                </div>
             </div>
-            <div class="field-row">
-                <label>Status:</label>
-                <select id="fee_payment_status">
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                    <option value="Pending">Pending</option>
-                </select>
-            </div>
-            <div class="field-row">
-                <label>Details:</label>
-                <textarea id="fee_payment_text" rows="3">{{ erp_data.fee_payment or '' }}</textarea>
-            </div>
-            <button class="save-btn" onclick="saveData('fee_payment')">Save</button>
+            <button class="save-btn" onclick="saveData('fee_payment')">Save Fee Details</button>
             {% else %}
-            <div class="field-row"><label>Details:</label><span>{{ erp_data.fee_payment or 'Not Updated' }}</span></div>
+            <div class="fee-structure">
+                <div id="fee_display">
+                    {{ erp_data.fee_payment or 'Fee details not updated by admin yet' }}
+                </div>
+            </div>
             {% endif %}
         </div>
 
@@ -112,8 +137,16 @@
                 </select>
             </div>
             <div class="field-row">
+                <label>Status:</label>
+                <select id="attendance_status">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Leave">Leave</option>
+                </select>
+            </div>
+            <div class="field-row">
                 <label>Details:</label>
-                <textarea id="attendance_text" rows="3">{{ erp_data.attendance or '' }}</textarea>
+                <textarea id="attendance_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('attendance')">Save</button>
             {% else %}
@@ -129,17 +162,12 @@
                 <label>Test/Exam:</label>
                 <select id="academic_progress_test">
                     <option value="Entrance / Diagnostic Test">Entrance / Diagnostic Test</option>
-                    <option value="MT 1">MT 1</option>
-                    <option value="MT 2">MT 2</option>
-                    <option value="MT 3">MT 3</option>
-                    <option value="MT 4">MT 4</option>
-                    <option value="MT 5">MT 5</option>
-                    <option value="MT 6">MT 6</option>
+                    <option value="MT 1">MT 1</option><option value="MT 2">MT 2</option><option value="MT 3">MT 3</option>
+                    <option value="MT 4">MT 4</option><option value="MT 5">MT 5</option><option value="MT 6">MT 6</option>
                     <option value="Mid-Term / SA 1">Mid-Term / SA 1</option>
                     <option value="Annual Exams">Annual Exams</option>
                     <option value="Board Exams">Board Exams</option>
                     <option value="JEE / NEET">JEE / NEET</option>
-                    <option value="New Graph">New Graph</option>
                 </select>
             </div>
             <div class="field-row">
@@ -150,8 +178,8 @@
                 </select>
             </div>
             <div class="field-row">
-                <label>Remarks:</label>
-                <textarea id="academic_progress_text" rows="3">{{ erp_data.academic_progress or '' }}</textarea>
+                <label>Marks/Remarks:</label>
+                <textarea id="academic_progress_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('academic_progress')">Save</button>
             {% else %}
@@ -177,8 +205,8 @@
                 </select>
             </div>
             <div class="field-row">
-                <label>Details:</label>
-                <textarea id="accolades_text" rows="3">{{ erp_data.accolades or '' }}</textarea>
+                <label>Achievement:</label>
+                <textarea id="accolades_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('accolades')">Save</button>
             {% else %}
@@ -202,7 +230,6 @@
                     <option value="Dance / Music">Dance / Music</option>
                     <option value="Literary and / Art and Dramatics">Literary and / Art and Dramatics</option>
                     <option value="Social Work">Social Work</option>
-                    <option value="Dance / Music">Dance / Music</option>
                     <option value="Quiz">Quiz</option>
                     <option value="Exhibition">Exhibition</option>
                 </select>
@@ -217,7 +244,7 @@
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="applications_text" rows="3">{{ erp_data.applications or '' }}</textarea>
+                <textarea id="applications_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('applications')">Save</button>
             {% else %}
@@ -248,7 +275,7 @@
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="participation_text" rows="3">{{ erp_data.participation or '' }}</textarea>
+                <textarea id="participation_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('participation')">Save</button>
             {% else %}
@@ -267,12 +294,12 @@
                     <option value="Exam Schedule">Exam Schedule</option>
                     <option value="TTA Activity Schedule">TTA Activity Schedule</option>
                     <option value="Sports Schedule">Sports Schedule</option>
-                    <option value="Special Classes (Subjectwise / Classwise)">Special Classes (Subjectwise / Classwise)</option>
+                    <option value="Special Classes">Special Classes</option>
                 </select>
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="schedules_text" rows="3">{{ erp_data.schedules or '' }}</textarea>
+                <textarea id="schedules_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('schedules')">Save</button>
             {% else %}
@@ -303,7 +330,7 @@
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="view_calendar_text" rows="3">{{ erp_data.view_calendar or '' }}</textarea>
+                <textarea id="view_calendar_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('view_calendar')">Save</button>
             {% else %}
@@ -329,7 +356,7 @@
             </div>
             <div class="field-row">
                 <label>Link/Details:</label>
-                <textarea id="downloads_text" rows="3">{{ erp_data.downloads or '' }}</textarea>
+                <textarea id="downloads_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('downloads')">Save</button>
             {% else %}
@@ -351,7 +378,7 @@
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="discipline_text" rows="3">{{ erp_data.discipline or '' }}</textarea>
+                <textarea id="discipline_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('discipline')">Save</button>
             {% else %}
@@ -372,8 +399,12 @@
                 </select>
             </div>
             <div class="field-row">
+                <label>Date/Time:</label>
+                <input type="text" id="parents_meetings_datetime" placeholder="DD-MM-YYYY HH:MM">
+            </div>
+            <div class="field-row">
                 <label>Details:</label>
-                <textarea id="parents_meetings_text" rows="3">{{ erp_data.parents_meetings or '' }}</textarea>
+                <textarea id="parents_meetings_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('parents_meetings')">Save</button>
             {% else %}
@@ -402,7 +433,7 @@
             </div>
             <div class="field-row">
                 <label>Details:</label>
-                <textarea id="counselling_text" rows="3">{{ erp_data.counselling or '' }}</textarea>
+                <textarea id="counselling_text" rows="3"></textarea>
             </div>
             <button class="save-btn" onclick="saveData('counselling')">Save</button>
             {% else %}
@@ -423,16 +454,19 @@
             let value = '';
 
             if(field === 'fee_payment') {
-                let cat = document.getElementById('fee_payment_category').value;
-                let status = document.getElementById('fee_payment_status').value;
-                let details = document.getElementById('fee_payment_text').value;
-                value = `${cat} - ${status} | ${details}`;
+                let year = document.getElementById('fee_year').value;
+                let term = document.getElementById('fee_term').value;
+                let status = document.getElementById('fee_status').value;
+                let outstanding = document.getElementById('fee_outstanding').value;
+                let remarks = document.getElementById('fee_payment_text').value;
+                value = `Year: ${year} | Term: ${term} | Status: ${status} | Outstanding: ₹${outstanding || '0.00'} | ${remarks}`;
             }
             else if(field === 'attendance') {
                 let type = document.getElementById('attendance_type').value;
                 let month = document.getElementById('attendance_month').value;
+                let status = document.getElementById('attendance_status').value;
                 let details = document.getElementById('attendance_text').value;
-                value = `${type} - ${month} | ${details}`;
+                value = `${type} - ${month} | Status: ${status} | ${details}`;
             }
             else if(field === 'academic_progress') {
                 let test = document.getElementById('academic_progress_test').value;
@@ -479,8 +513,9 @@
             }
             else if(field === 'parents_meetings') {
                 let status = document.getElementById('parents_meetings_status').value;
+                let datetime = document.getElementById('parents_meetings_datetime').value;
                 let details = document.getElementById('parents_meetings_text').value;
-                value = `${status} | ${details}`;
+                value = `${status} | ${datetime} | ${details}`;
             }
             else if(field === 'counselling') {
                 let type = document.getElementById('counselling_type').value;
@@ -504,7 +539,7 @@
                 body: JSON.stringify(data)
             });
             if(res.ok) {
-                alert('Saved successfully!');
+                alert('Saved successfully! Student will see this update immediately.');
                 location.reload();
             } else {
                 alert('Error saving data');
