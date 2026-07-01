@@ -122,19 +122,11 @@ def update_student(student_id):
     data = request.json
     conn = get_db_connection()
     conn.execute('INSERT OR IGNORE INTO student_data (user_id) VALUES (?)', (student_id,))
-    conn.execute('''
-        UPDATE student_data SET
-        fee_payment=?, attendance=?, academic_progress=?, accolades=?,
-        applications=?, participation=?, schedules=?, view_calendar=?, downloads=?,
-        discipline=?, parents_meetings=?, counselling=?
-        WHERE user_id =?
-    ''', (
-        data.get('fee_payment'), data.get('attendance'), data.get('academic_progress'),
-        data.get('accolades'), data.get('applications'), data.get('participation'),
-        data.get('schedules'), data.get('view_calendar'), data.get('downloads'),
-        data.get('discipline'), data.get('parents_meetings'), data.get('counselling'),
-        student_id
-    ))
+    
+    # Build update query dynamically for whatever field was sent
+    for field, value in data.items():
+        conn.execute(f'UPDATE student_data SET {field}=? WHERE user_id=?', (value, student_id))
+    
     conn.commit()
     conn.close()
     return {"status": "success"}
