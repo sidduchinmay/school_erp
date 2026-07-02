@@ -60,58 +60,71 @@
             <button class="tab-btn" onclick="openTab('counselling')">Counselling</button>
         </div>
 
-        <!-- Fee Payment Tab -->
-        <div id="fee_payment" class="tab-content active">
-            <h3>Fee Payment</h3>
-            {% if is_admin %}
-            <div class="fee-structure">
-                <div class="fee-row">
-                    <div class="fee-col">
-                        <label>Academic Year:</label>
-                        <select id="fee_year">
-                            <option value="2025-26">2025-26</option>
-                            <option value="2024-25">2024-25</option>
-                        </select>
-                    </div>
-                    <div class="fee-col">
-                        <label>Term:</label>
-                        <select id="fee_term">
-                            <option value="Arrears">Arrears</option>
-                            <option value="Term-1">Term-1</option>
-                            <option value="Term-2">Term-2</option>
-                            <option value="Programme Fees">Programme Fees</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="fee-row">
-                    <div class="fee-col">
-                        <label>Status:</label>
-                        <select id="fee_status">
-                            <option value="Paid">Paid</option>
-                            <option value="Unpaid">Unpaid</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Partial">Partial</option>
-                        </select>
-                    </div>
-                    <div class="fee-col">
-                        <label>Outstanding Amount:</label>
-                        <input type="number" id="fee_outstanding" placeholder="0.00" step="0.01">
-                    </div>
-                </div>
-                <div class="field-row">
-                    <label>Remarks:</label>
-                    <textarea id="fee_payment_text" rows="2"></textarea>
-                </div>
+       <!-- Fee Payment Tab -->
+<div id="fee_payment" class="tab-content active">
+    <h3>Fee Payment</h3>
+    {% if is_admin %}
+    <div class="fee-structure">
+        <div class="fee-row">
+            <div class="fee-col">
+                <label>Academic Year:</label>
+                <select id="fee_year" onchange="loadFeeYear()">
+                    <option value="2025-26">2025-26</option>
+                    <option value="2024-25">2024-25</option>
+                    <option value="2023-24">2023-24</option>
+                </select>
             </div>
-            <button class="save-btn" onclick="saveData('fee_payment')">Save Fee Details</button>
-            {% else %}
-            <div class="fee-structure">
-                <div id="fee_display">
-                    {{ erp_data.fee_payment or 'Fee details not updated by admin yet' }}
-                </div>
-            </div>
-            {% endif %}
         </div>
+        
+        <table style="width:100%; border-collapse: collapse; margin: 15px 0;">
+            <tr style="background: #34495e; color: white;">
+                <th style="padding: 10px; text-align: left;">Fee Type</th>
+                <th style="padding: 10px; text-align: right;">Total Fee</th>
+                <th style="padding: 10px; text-align: right;">Paid</th>
+                <th style="padding: 10px; text-align: right;">Balance</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Arrears</td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="arrears" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;">-</td>
+                <td style="padding: 10px; border: 1px solid #ddd;" id="arrears_bal" class="amount">₹0.00</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Term-1 Fee</td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term1_fee" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term1_paid" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;" id="term1_bal" class="amount">₹0.00</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Term-2 Fee</td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term2_fee" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term2_paid" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;" id="term2_bal" class="amount">₹0.00</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Programme Fee</td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="programme_fee" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="programme_paid" value="0" step="0.01" oninput="calcBalance()"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;" id="programme_bal" class="amount">₹0.00</td>
+            </tr>
+            <tr style="background: #ecf0f1; font-weight: bold;">
+                <td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total Outstanding:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;" id="total_outstanding" class="amount">₹0.00</td>
+            </tr>
+        </table>
+        
+        <div class="field-row">
+            <label>Remarks:</label>
+            <textarea id="fee_remarks" rows="2"></textarea>
+        </div>
+    </div>
+    <button class="save-btn" onclick="saveFee()">Save Fee Details</button>
+    {% else %}
+    <div id="student_fee_view">
+        <p>Loading fee details...</p>
+    </div>
+    {% endif %}
+</div>
 
         <!-- Attendance Tab -->
         <div id="attendance" class="tab-content">
@@ -442,7 +455,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         function openTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -451,100 +464,148 @@
         }
 
         async function saveData(field) {
-            let value = '';
+            // ... existing saveData code ...
+        }
 
-            if(field === 'fee_payment') {
-                let year = document.getElementById('fee_year').value;
-                let term = document.getElementById('fee_term').value;
-                let status = document.getElementById('fee_status').value;
-                let outstanding = document.getElementById('fee_outstanding').value;
-                let remarks = document.getElementById('fee_payment_text').value;
-                value = `Year: ${year} | Term: ${term} | Status: ${status} | Outstanding: ₹${outstanding || '0.00'} | ${remarks}`;
-            }
-            else if(field === 'attendance') {
-                let type = document.getElementById('attendance_type').value;
-                let month = document.getElementById('attendance_month').value;
-                let status = document.getElementById('attendance_status').value;
-                let details = document.getElementById('attendance_text').value;
-                value = `${type} - ${month} | Status: ${status} | ${details}`;
-            }
-            else if(field === 'academic_progress') {
-                let test = document.getElementById('academic_progress_test').value;
-                let grade = document.getElementById('academic_progress_grade').value;
-                let remarks = document.getElementById('academic_progress_text').value;
-                value = `${test} - Grade: ${grade} | ${remarks}`;
-            }
-            else if(field === 'accolades') {
-                let level = document.getElementById('accolades_level').value;
-                let details = document.getElementById('accolades_text').value;
-                value = `${level} | ${details}`;
-            }
-            else if(field === 'applications') {
-                let type = document.getElementById('applications_type').value;
-                let status = document.getElementById('applications_status').value;
-                let details = document.getElementById('applications_text').value;
-                value = `${type} - ${status} | ${details}`;
-            }
-            else if(field === 'participation') {
-                let activity = document.getElementById('participation_activity').value;
-                let details = document.getElementById('participation_text').value;
-                value = `${activity} | ${details}`;
-            }
-            else if(field === 'schedules') {
-                let type = document.getElementById('schedules_type').value;
-                let details = document.getElementById('schedules_text').value;
-                value = `${type} | ${details}`;
-            }
-            else if(field === 'view_calendar') {
-                let month = document.getElementById('view_calendar_month').value;
-                let type = document.getElementById('view_calendar_type').value;
-                let details = document.getElementById('view_calendar_text').value;
-                value = `${month} - ${type} | ${details}`;
-            }
-            else if(field === 'downloads') {
-                let type = document.getElementById('downloads_type').value;
-                let details = document.getElementById('downloads_text').value;
-                value = `${type} | ${details}`;
-            }
-            else if(field === 'discipline') {
-                let remarks = document.getElementById('discipline_remarks').value;
-                let details = document.getElementById('discipline_text').value;
-                value = `${remarks} | ${details}`;
-            }
-            else if(field === 'parents_meetings') {
-                let status = document.getElementById('parents_meetings_status').value;
-                let datetime = document.getElementById('parents_meetings_datetime').value;
-                let details = document.getElementById('parents_meetings_text').value;
-                value = `${status} | ${datetime} | ${details}`;
-            }
-            else if(field === 'counselling') {
-                let type = document.getElementById('counselling_type').value;
-                let status = document.getElementById('counselling_status').value;
-                let details = document.getElementById('counselling_text').value;
-                value = `${type} - ${status} | ${details}`;
-            }
+        // ADD THE FEE JS HERE - RIGHT AFTER saveData FUNCTION
+        
+        let currentFeeData = {};
 
-            const data = {};
-            data[field] = value;
+        function calcBalance() {
+            const arrears = parseFloat(document.getElementById('arrears').value) || 0;
+            const t1_fee = parseFloat(document.getElementById('term1_fee').value) || 0;
+            const t1_paid = parseFloat(document.getElementById('term1_paid').value) || 0;
+            const t2_fee = parseFloat(document.getElementById('term2_fee').value) || 0;
+            const t2_paid = parseFloat(document.getElementById('term2_paid').value) || 0;
+            const prog_fee = parseFloat(document.getElementById('programme_fee').value) || 0;
+            const prog_paid = parseFloat(document.getElementById('programme_paid').value) || 0;
+            
+            const arrears_bal = arrears;
+            const t1_bal = t1_fee - t1_paid;
+            const t2_bal = t2_fee - t2_paid;
+            const prog_bal = prog_fee - prog_paid;
+            const total = arrears_bal + t1_bal + t2_bal + prog_bal;
+            
+            document.getElementById('arrears_bal').textContent = `₹${arrears_bal.toFixed(2)}`;
+            document.getElementById('term1_bal').textContent = `₹${t1_bal.toFixed(2)}`;
+            document.getElementById('term2_bal').textContent = `₹${t2_bal.toFixed(2)}`;
+            document.getElementById('programme_bal').textContent = `₹${prog_bal.toFixed(2)}`;
+            document.getElementById('total_outstanding').textContent = `₹${total.toFixed(2)}`;
+        }
 
+        async function saveFee() {
+            const data = {
+                academic_year: document.getElementById('fee_year').value,
+                arrears: parseFloat(document.getElementById('arrears').value) || 0,
+                term1_fee: parseFloat(document.getElementById('term1_fee').value) || 0,
+                term1_paid: parseFloat(document.getElementById('term1_paid').value) || 0,
+                term2_fee: parseFloat(document.getElementById('term2_fee').value) || 0,
+                term2_paid: parseFloat(document.getElementById('term2_paid').value) || 0,
+                programme_fee: parseFloat(document.getElementById('programme_fee').value) || 0,
+                programme_paid: parseFloat(document.getElementById('programme_paid').value) || 0,
+                remarks: document.getElementById('fee_remarks').value
+            };
+            
             {% if is_admin and editing_student_id %}
-            const url = '/admin/update_student/{{ editing_student_id }}';
+            const url = '/admin/update_fee/{{ editing_student_id }}';
             {% else %}
-            const url = '/admin/update_erp';
+            alert('Only admin can update fees');
+            return;
             {% endif %}
-
+            
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
             if(res.ok) {
-                alert('Saved successfully! Student will see this update immediately.');
-                location.reload();
+                alert('Fee details saved! Student will see this immediately.');
+                loadFeeYear();
             } else {
-                alert('Error saving data');
+                alert('Error saving fee data');
             }
         }
+
+        async function loadFeeYear() {
+            {% if is_admin and editing_student_id %}
+            const studentId = {{ editing_student_id }};
+            {% else %}
+            const studentId = {{ user.id }};
+            {% endif %}
+            
+            const res = await fetch(`/get_fee_details/${studentId}`);
+            const data = await res.json();
+            currentFeeData = data.fees;
+            
+            {% if is_admin %}
+            const year = document.getElementById('fee_year').value;
+            const feeRecord = currentFeeData.find(f => f.academic_year === year);
+            if(feeRecord) {
+                document.getElementById('arrears').value = feeRecord.arrears || 0;
+                document.getElementById('term1_fee').value = feeRecord.term1_fee || 0;
+                document.getElementById('term1_paid').value = feeRecord.term1_paid || 0;
+                document.getElementById('term2_fee').value = feeRecord.term2_fee || 0;
+                document.getElementById('term2_paid').value = feeRecord.term2_paid || 0;
+                document.getElementById('programme_fee').value = feeRecord.programme_fee || 0;
+                document.getElementById('programme_paid').value = feeRecord.programme_paid || 0;
+                document.getElementById('fee_remarks').value = feeRecord.remarks || '';
+                calcBalance();
+            } else {
+                // Clear fields if no record for this year
+                document.getElementById('arrears').value = 0;
+                document.getElementById('term1_fee').value = 0;
+                document.getElementById('term1_paid').value = 0;
+                document.getElementById('term2_fee').value = 0;
+                document.getElementById('term2_paid').value = 0;
+                document.getElementById('programme_fee').value = 0;
+                document.getElementById('programme_paid').value = 0;
+                document.getElementById('fee_remarks').value = '';
+                calcBalance();
+            }
+            {% else %}
+            displayStudentFees();
+            {% endif %}
+        }
+
+        function displayStudentFees() {
+            const container = document.getElementById('student_fee_view');
+            if(!currentFeeData || currentFeeData.length === 0) {
+                container.innerHTML = '<p>Fee details not updated by admin yet</p>';
+                return;
+            }
+            
+            let html = '';
+            currentFeeData.forEach(fee => {
+                const t1_bal = (fee.term1_fee || 0) - (fee.term1_paid || 0);
+                const t2_bal = (fee.term2_fee || 0) - (fee.term2_paid || 0);
+                const prog_bal = (fee.programme_fee || 0) - (fee.programme_paid || 0);
+                const total = (fee.arrears || 0) + t1_bal + t2_bal + prog_bal;
+                
+                html += `
+                <div class="fee-structure">
+                    <h4>Academic Year: ${fee.academic_year}</h4>
+                    <table style="width:100%; border-collapse: collapse; margin: 10px 0;">
+                        <tr style="background: #34495e; color: white;">
+                            <th style="padding: 8px; text-align: left;">Fee Type</th>
+                            <th style="padding: 8px; text-align: right;">Total</th>
+                            <th style="padding: 8px; text-align: right;">Paid</th>
+                            <th style="padding: 8px; text-align: right;">Balance</th>
+                        </tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd;">Arrears</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.arrears || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd;">-</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;" class="amount">₹${(fee.arrears || 0).toFixed(2)}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd;">Term-1</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.term1_fee || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.term1_paid || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;" class="amount">₹${t1_bal.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd;">Term-2</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.term2_fee || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.term2_paid || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;" class="amount">₹${t2_bal.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 8px; border: 1px solid #ddd;">Programme</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.programme_fee || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${(fee.programme_paid || 0).toFixed(2)}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;" class="amount">₹${prog_bal.toFixed(2)}</td></tr>
+                        <tr style="background: #ecf0f1; font-weight: bold;"><td colspan="3" style="padding: 8px; text-align: right; border: 1px solid #ddd;">Total Outstanding:</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;" class="amount">₹${total.toFixed(2)}</td></tr>
+                    </table>
+                    ${fee.remarks ? `<p><strong>Remarks:</strong> ${fee.remarks}</p>` : ''}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // Load fees on page load
+        window.addEventListener('DOMContentLoaded', loadFeeYear);
+
     </script>
 </body>
 </html>

@@ -24,20 +24,22 @@ def init_db():
             roll_no TEXT
         )
     ''')
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS student_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE,
-            fee_payment TEXT, attendance TEXT, academic_progress TEXT, accolades TEXT,
-            applications TEXT, participation TEXT, schedules TEXT, view_calendar TEXT, downloads TEXT,
-            discipline TEXT, parents_meetings TEXT, counselling TEXT,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    ''')
-    conn.execute("INSERT OR IGNORE INTO users (username, password, role, name, class_division) VALUES ('admin', 'admin123', 'admin', 'Principal', 'All')")
+    conn.execute('''CREATE TABLE IF NOT EXISTS fee_structure (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        academic_year TEXT NOT NULL,
+        arrears REAL DEFAULT 0,
+        term1_fee REAL DEFAULT 0,
+        term1_paid REAL DEFAULT 0,
+        term2_fee REAL DEFAULT 0,
+        term2_paid REAL DEFAULT 0,
+        programme_fee REAL DEFAULT 0,
+        programme_paid REAL DEFAULT 0,
+        remarks TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
     conn.commit()
     conn.close()
-    print("init_db complete. Tables created.")
 
 # Force run on import - works with gunicorn on Render
 init_db()
@@ -177,6 +179,34 @@ def bulk_upload():
     conn.commit()
     conn.close()
     return jsonify({"status": "success", "added": count})
+
+@app.route('/admin/update_fee/<int:student_id>', methods=['POST'])
+def update_fee(student_id):
+    if session.get('role')!= 'admin':
+        return "Unauthorized", 403
+    data = request.json
+    conn = get_db_connection()
+    # Delete old record for that year and insert new
+    conn.execute('DELETE FROM fee_structure WHERE user_id=? AND academic_year=?', 
+                 (student_id, data['academic_year']))
+    conn.execute('''INSERT INTO fee_structure 
+        (user_id, academic_year, arrears, term1_fee, term1_paid, term2_fee, term2_paid, programme_fee, programme_paid, remarks) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (student_id, data['academic_year'], data['arrears'], data['term1_fee'], data['term1_paid'], 
+         data['term2_fee'], data['term2_paid'], data['programme_fee'], data['programme_paid'], data['remarks']))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
+
+@app.route('/get_fee_details/<int:student_id>')
+def get_fee_details(student_id):
+    conn = get_db_connection()
+    fees = conn.execute('SELECT * FROM fee_structure WHERE user_id=? ORDER BY academic_year DESC', 
+                       (student_id,)).fetchall()
+    conn.close()
+    return {"fees": [dict(row) for row in fees]}
+
+
 
 @app.route('/logout')
 def logout():
