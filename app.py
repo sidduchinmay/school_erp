@@ -1,20 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import os
-import csv
-from io import StringIO
 
 app = Flask(__name__)
-app.secret_key = 'aps-erp-secret-key-2025-26'
+app.secret_key = 'your-secret-key-change-this'
 
-# Use /tmp on Render - always writable
-DB_PATH = '/tmp/school.db'
+DATABASE = 'database.db'
 
+# 1. Define get_db_connection FIRST
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# 2. Define init_db SECOND
 def init_db():
     conn = get_db_connection()
-    # Drop old table if schema changed - CAUTION: deletes data
-    # conn.execute('DROP TABLE IF EXISTS student_data')  # Uncomment only if you want to wipe data
-    
     conn.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -51,10 +52,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Call this immediately after defining it
-init_db()
-
-# Force run on import - works with gunicorn on Render
+# 3. Now call init_db AFTER both functions are defined
 init_db()
 
 def get_db_connection():
