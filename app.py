@@ -11,19 +11,29 @@ app.secret_key = 'aps-erp-secret-key-2025-26'
 DB_PATH = '/tmp/school.db'
 
 def init_db():
-    print("Starting init_db...")
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL,
-            name TEXT NOT NULL,
-            class_division TEXT,
-            roll_no TEXT
-        )
-    ''')
+    conn = get_db_connection()
+    # Drop old table if schema changed - CAUTION: deletes data
+    # conn.execute('DROP TABLE IF EXISTS student_data')  # Uncomment only if you want to wipe data
+    
+    conn.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL,
+        name TEXT NOT NULL,
+        class_division TEXT NOT NULL,
+        roll_no TEXT
+    )''')
+    
+    conn.execute('''CREATE TABLE IF NOT EXISTS student_data (
+        user_id INTEGER PRIMARY KEY,
+        fee_payment TEXT, attendance TEXT, academic_progress TEXT,
+        accolades TEXT, applications TEXT, participation TEXT,
+        schedules TEXT, view_calendar TEXT, downloads TEXT,
+        discipline TEXT, parents_meetings TEXT, counselling TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )''')
+    
     conn.execute('''CREATE TABLE IF NOT EXISTS fee_structure (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -40,6 +50,9 @@ def init_db():
     )''')
     conn.commit()
     conn.close()
+
+# Call this immediately after defining it
+init_db()
 
 # Force run on import - works with gunicorn on Render
 init_db()
@@ -63,7 +76,11 @@ def get_user_by_id(user_id):
 
 def get_student_data(user_id):
     conn = get_db_connection()
-    data = conn.execute('SELECT * FROM student_data WHERE user_id =?', (user_id,)).fetchone()
+    # Auto-create row if missing
+    conn.execute('INSERT OR IGNORE INTO student_data (user_id) VALUES (?)', (user_id,))
+    conn.commit()
+    
+    data = conn.execute('SELECT * FROM student_data WHERE user_id = ?', (user_id,)).fetchone()
     conn.close()
     return dict(data) if data else {}
 
