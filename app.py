@@ -114,15 +114,30 @@ def login():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = get_user_by_id(session['user_id'])
-    is_admin = session.get('role') == 'admin'
-
-    if is_admin:
-        students = get_all_students()
-        return render_template('admin_dashboard.html', user=user, students=students)
-    else:
-        erp_data = get_student_data(session['user_id'])
-        return render_template('student_dashboard.html', user=user, erp_data=erp_data, is_admin=False)
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    conn.close()
+    
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+    
+    # Get student_data for all tabs
+    erp_data = get_student_data(session['user_id']) or {}
+    
+    # Get fee_structure for fee tab
+    fees = conn = get_db_connection()
+    fee_records = conn.execute('SELECT * FROM fee_structure WHERE user_id=? ORDER BY academic_year DESC', 
+                              (session['user_id'],)).fetchall()
+    conn.close()
+    
+    return render_template('student_dashboard.html', 
+                           user=dict(user), 
+                           erp_data=erp_data,
+                           fee_records=[dict(f) for f in fee_records],
+                           is_admin=(session['role'] == 'admin'),
+                           editing_student_id=session.get('editing_student_id'))
 
 @app.route('/admin/student/<int:student_id>')
 def edit_student(student_id):
