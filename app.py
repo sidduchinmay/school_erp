@@ -5,6 +5,7 @@ import traceback
 import csv
 import io
 
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
@@ -133,11 +134,6 @@ def add_user():
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-
-
-
-
-
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -200,37 +196,40 @@ def bulk_upload():
         return "Unauthorized", 403
     
     if request.method == 'POST':
-        if 'file' not in request.files:
-            return render_template('bulk_upload.html', error='No file uploaded')
-        
         file = request.files['file']
         if file.filename == '':
             return render_template('bulk_upload.html', error='No file selected')
         
-        if not file.filename.endswith('.csv'):
-            return render_template('bulk_upload.html', error='Only CSV files allowed')
-        
         try:
             stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-            csv_input = csv.DictReader(stream)
+            csv_input = csv.reader(stream) # use reader instead of DictReader for better error control
+            
+            headers = next(csv_input)
+            expected_headers = ['username','password','role','name','class_division','roll_no']
+            
+            if headers != expected_headers:
+                return render_template('bulk_upload.html', 
+                    error=f'Invalid headers. Expected: {",".join(expected_headers)}')
             
             conn = get_db_connection()
             added = 0
             errors = []
             
-            for i, row in enumerate(csv_input, start=2): # start=2 because row 1 is header
+            for i, row in enumerate(csv_input, start=2):
+                if len(row) != 6:
+                    errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Row: {row}")
+                    continue
+                
+                username, password, role, name, class_division, roll_no = [x.strip() for x in row]
+                
                 try:
-                    # Expected columns: username,password,role,name,class_division,roll_no
                     conn.execute('''INSERT INTO users 
                         (username, password, role, name, class_division, roll_no) 
                         VALUES (?, ?, ?)''',
-                        (row['username'], row['password'], row['role'], 
-                         row['name'], row['class_division'], row.get('roll_no', '')))
+                        (username, password, role, name, class_division, roll_no))
                     added += 1
                 except sqlite3.IntegrityError:
-                    errors.append(f"Row {i}: Username '{row['username']}' already exists")
-                except KeyError as e:
-                    errors.append(f"Row {i}: Missing column {e}")
+                    errors.append(f"Row {i}: Username '{username}' already exists")
             
             conn.commit()
             conn.close()
