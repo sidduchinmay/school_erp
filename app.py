@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import sqlite3
 import os
 import traceback
+import csv
+import io
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
@@ -190,6 +192,59 @@ def get_fee_details(student_id):
         return {"fees": [dict(row) for row in fees]}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
+
+
+@app.route('/admin/bulk_upload', methods=['GET', 'POST'])
+def bulk_upload():
+    if session.get('role') != 'admin':
+        return "Unauthorized", 403
+    
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return render_template('bulk_upload.html', error='No file uploaded')
+        
+        file = request.files['file']
+        if file.filename == '':
+            return render_template('bulk_upload.html', error='No file selected')
+        
+        if not file.filename.endswith('.csv'):
+            return render_template('bulk_upload.html', error='Only CSV files allowed')
+        
+        try:
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_input = csv.DictReader(stream)
+            
+            conn = get_db_connection()
+            added = 0
+            errors = []
+            
+            for i, row in enumerate(csv_input, start=2): # start=2 because row 1 is header
+                try:
+                    # Expected columns: username,password,role,name,class_division,roll_no
+                    conn.execute('''INSERT INTO users 
+                        (username, password, role, name, class_division, roll_no) 
+                        VALUES (?, ?, ?)''',
+                        (row['username'], row['password'], row['role'], 
+                         row['name'], row['class_division'], row.get('roll_no', '')))
+                    added += 1
+                except sqlite3.IntegrityError:
+                    errors.append(f"Row {i}: Username '{row['username']}' already exists")
+                except KeyError as e:
+                    errors.append(f"Row {i}: Missing column {e}")
+            
+            conn.commit()
+            conn.close()
+            
+            return render_template('bulk_upload.html', 
+                                   success=f'{added} students added successfully', 
+                                   errors=errors)
+        except Exception as e:
+            return render_template('bulk_upload.html', error=f'Error: {str(e)}')
+    
+    return render_template('bulk_upload.html')
+
+
+
 
 @app.route('/logout')
 def logout():
