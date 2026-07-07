@@ -201,11 +201,13 @@ def bulk_upload():
             return render_template('bulk_upload.html', error='No file selected')
         
         try:
-            # Read file and split by lines to see exact problem
-            content = file.stream.read().decode("UTF8")
-            lines = [line for line in content.splitlines() if line.strip()] # remove blank lines
+            content = file.stream.read().decode("UTF-8-sig") # UTF-8-sig removes BOM from Excel
+            lines = [line for line in content.splitlines() if line.strip()]
             
-            csv_input = csv.reader(lines)
+            # AUTO DETECT DELIMITER , or ;
+            sample = '\n'.join(lines[:5])
+            dialect = csv.Sniffer().sniff(sample, delimiters=',;')
+            csv_input = csv.reader(lines, dialect)
             
             headers = next(csv_input)
             headers = [h.strip() for h in headers]
@@ -221,21 +223,16 @@ def bulk_upload():
             
             for i, row in enumerate(csv_input, start=2):
                 row = [x.strip() for x in row]
-                
-                # Skip completely empty rows
-                if all(x == '' for x in row):
-                    continue
+                if all(x == '' for x in row): continue
                     
                 if len(row) != 6:
-                    errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
+                    errors.append(f"Row {i}: Found {len(row)} columns. Data: {row}")
                     continue
                 
                 username, password, role, name, class_division, roll_no = row
                 
                 try:
-                    conn.execute('''INSERT INTO users 
-                        (username, password, role, name, class_division, roll_no) 
-                        VALUES (?, ?, ?)''',
+                    conn.execute('INSERT INTO users (username, password, role, name, class_division, roll_no) VALUES (?, ?, ?)',
                         (username, password, role, name, class_division, roll_no))
                     added += 1
                 except sqlite3.IntegrityError:
@@ -244,13 +241,9 @@ def bulk_upload():
             conn.commit()
             conn.close()
             
-            if errors:
-                return render_template('bulk_upload.html', 
-                                   success=f'{added} users added', 
-                                   errors=errors)
-            else:
-                return render_template('bulk_upload.html', 
-                                   success=f'{added} users added successfully')
+            msg = f'{added} users added successfully'
+            if errors: return render_template('bulk_upload.html', success=msg, errors=errors)
+            else: return render_template('bulk_upload.html', success=msg)
                                    
         except Exception as e:
             return render_template('bulk_upload.html', error=f'Error: {str(e)}')
