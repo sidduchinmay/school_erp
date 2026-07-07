@@ -201,10 +201,9 @@ def bulk_upload():
             return render_template('bulk_upload.html', error='No file selected')
         
         try:
-            content = file.stream.read().decode("UTF-8-sig") # UTF-8-sig removes BOM from Excel
+            content = file.stream.read().decode("UTF-8-sig")
             lines = [line for line in content.splitlines() if line.strip()]
             
-            # AUTO DETECT DELIMITER , or ;
             sample = '\n'.join(lines[:5])
             dialect = csv.Sniffer().sniff(sample, delimiters=',;')
             csv_input = csv.reader(lines, dialect)
@@ -232,7 +231,9 @@ def bulk_upload():
                 username, password, role, name, class_division, roll_no = row
                 
                 try:
-                    conn.execute('INSERT INTO users (username, password, role, name, class_division, roll_no) VALUES (?, ?, ?)',
+                    conn.execute('''INSERT INTO users 
+                        (username, password, role, name, class_division, roll_no) 
+                        VALUES (?, ?, ?)''',
                         (username, password, role, name, class_division, roll_no))
                     added += 1
                 except sqlite3.IntegrityError:
