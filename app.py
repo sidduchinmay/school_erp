@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, Response
 import sqlite3
 import os
 import traceback
@@ -259,8 +259,16 @@ def update_student(student_id):
     return {"status": "success"}
 @app.route('/admin/download_sample_csv')
 def download_sample_csv():
-    csv_data = "username,password,role,name,class_division,roll_no\nSTU001,pass123,student,Rahul Sharma,10-A,1\nSTU002,pass123,student,Priya Singh,10-A,2"
-    return Response(csv_data, mimetype="text/csv", headers={"Content-disposition":"attachment; filename=sample_students.csv"})
+    csv_data = """username,password,role,name,class_division,roll_no
+STU001,pass123,student,Rahul Sharma,10-A,1
+STU002,pass123,student,Priya Singh,10-A,2
+TCH001,teach123,teacher,Anita Rao,10-A,
+"""
+    return Response(
+        csv_data, 
+        mimetype="text/csv", 
+        headers={"Content-disposition": "attachment; filename=sample_students.csv"}
+    )
 
 
 @app.route('/logout')
