@@ -202,25 +202,30 @@ def bulk_upload():
         
         try:
             stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-            csv_input = csv.reader(stream) # use reader instead of DictReader for better error control
+            csv_input = csv.reader(stream)
             
             headers = next(csv_input)
-            expected_headers = ['username','password','role','name','class_division','roll_no']
+            expected = ['username','password','role','name','class_division','roll_no']
             
-            if headers != expected_headers:
+            if [h.strip() for h in headers] != expected:
                 return render_template('bulk_upload.html', 
-                    error=f'Invalid headers. Expected: {",".join(expected_headers)}')
+                    error=f'Invalid headers. Expected: {",".join(expected)}')
             
             conn = get_db_connection()
             added = 0
             errors = []
             
             for i, row in enumerate(csv_input, start=2):
+                row = [x.strip() for x in row]
                 if len(row) != 6:
-                    errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Row: {row}")
+                    errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
                     continue
                 
-                username, password, role, name, class_division, roll_no = [x.strip() for x in row]
+                username, password, role, name, class_division, roll_no = row
+                
+                if role not in ['student', 'teacher']:
+                    errors.append(f"Row {i}: role must be 'student' or 'teacher'")
+                    continue
                 
                 try:
                     conn.execute('''INSERT INTO users 
@@ -235,7 +240,7 @@ def bulk_upload():
             conn.close()
             
             return render_template('bulk_upload.html', 
-                                   success=f'{added} students added successfully', 
+                                   success=f'{added} users added successfully', 
                                    errors=errors)
         except Exception as e:
             return render_template('bulk_upload.html', error=f'Error: {str(e)}')
@@ -252,7 +257,10 @@ def update_student(student_id):
     conn.commit()
     conn.close()
     return {"status": "success"}
-
+@app.route('/admin/download_sample_csv')
+def download_sample_csv():
+    csv_data = "username,password,role,name,class_division,roll_no\nSTU001,pass123,student,Rahul Sharma,10-A,1\nSTU002,pass123,student,Priya Singh,10-A,2"
+    return Response(csv_data, mimetype="text/csv", headers={"Content-disposition":"attachment; filename=sample_students.csv"})
 
 
 @app.route('/logout')
