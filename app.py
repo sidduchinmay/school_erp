@@ -201,15 +201,19 @@ def bulk_upload():
             return render_template('bulk_upload.html', error='No file selected')
         
         try:
-            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-            csv_input = csv.reader(stream)
+            # Read file and split by lines to see exact problem
+            content = file.stream.read().decode("UTF8")
+            lines = [line for line in content.splitlines() if line.strip()] # remove blank lines
+            
+            csv_input = csv.reader(lines)
             
             headers = next(csv_input)
+            headers = [h.strip() for h in headers]
             expected = ['username','password','role','name','class_division','roll_no']
             
-            if [h.strip() for h in headers] != expected:
+            if headers != expected:
                 return render_template('bulk_upload.html', 
-                    error=f'Invalid headers. Expected: {",".join(expected)}')
+                    error=f'Invalid headers. Found: {headers}. Expected: {expected}')
             
             conn = get_db_connection()
             added = 0
@@ -217,15 +221,16 @@ def bulk_upload():
             
             for i, row in enumerate(csv_input, start=2):
                 row = [x.strip() for x in row]
+                
+                # Skip completely empty rows
+                if all(x == '' for x in row):
+                    continue
+                    
                 if len(row) != 6:
                     errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
                     continue
                 
                 username, password, role, name, class_division, roll_no = row
-                
-                if role not in ['student', 'teacher']:
-                    errors.append(f"Row {i}: role must be 'student' or 'teacher'")
-                    continue
                 
                 try:
                     conn.execute('''INSERT INTO users 
@@ -239,9 +244,14 @@ def bulk_upload():
             conn.commit()
             conn.close()
             
-            return render_template('bulk_upload.html', 
-                                   success=f'{added} users added successfully', 
+            if errors:
+                return render_template('bulk_upload.html', 
+                                   success=f'{added} users added', 
                                    errors=errors)
+            else:
+                return render_template('bulk_upload.html', 
+                                   success=f'{added} users added successfully')
+                                   
         except Exception as e:
             return render_template('bulk_upload.html', error=f'Error: {str(e)}')
     
