@@ -7,51 +7,44 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #f4f6f9; }
-       .header { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-       .header h1 { font-size: 22px; }
-       .logout { background: #e74c3c; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; }
-       .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-       .user-info { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-       .admin-panel { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-       .admin-panel a { background:#1a73e8; color:white; padding:10px 15px; border-radius:4px; text-decoration:none; margin-right: 10px; display: inline-block; }
-       .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
-       .tab-btn { padding: 10px 12px; background: #bdc3c7; border: none; border-radius: 5px 5px 0 0; cursor: pointer; font-size: 13px; }
-       .tab-btn.active { background: #3498db; color: white; }
-       .tab-content { background: white; padding: 20px; border-radius: 0 8px 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; }
-       .tab-content.active { display: block; }
-       .field-row { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-       .field-row label { width: 160px; font-weight: bold; }
-       .field-row span { flex: 1; }
-       .field-row select,.field-row input,.field-row textarea { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px; }
-       .save-btn { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-       .fee-structure { background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
-       .fee-row { display: flex; gap: 15px; margin-bottom: 10px; }
-       .fee-col { flex: 1; }
-       .amount { color: #e74c3c; font-weight: bold; }
+      .header { background: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+      .header h1 { font-size: 22px; }
+      .logout { background: #e74c3c; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; }
+      .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+      .user-info { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+      .admin-panel { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+      .admin-panel a { background:#1a73e8; color:white; padding:10px 15px; border-radius:4px; text-decoration:none; margin-right: 10px; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+      .tab-btn { padding: 10px 12px; background: #bdc3c7; border: none; border-radius: 5px 5px 0 0; cursor: pointer; font-size: 13px; }
+      .tab-btn.active { background: #3498db; color: white; }
+      .tab-content { background: white; padding: 20px; border-radius: 0 8px 8px 8px; display: none; }
+      .tab-content.active { display: block; }
+      .field-row { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .field-row label { width: 160px; font-weight: bold; }
+      .field-row select,.field-row input,.field-row textarea { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px; }
+      .save-btn { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+      .fee-structure table { width:100%; border-collapse: collapse; margin: 15px 0; }
+      .fee-structure th { background: #34495e; color: white; padding: 10px; text-align: left; }
+      .fee-structure td { padding: 10px; border: 1px solid #ddd; }
+      .amount { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>APS ERP 2025-26</h1>
-        <div>
-            <span>{{ user.name }} | {{ user.role | title }} {% if is_admin and editing_student_id %}| Editing: {{ user.name }}{% endif %}</span>
-            <a href="/logout" class="logout">Logout</a>
-        </div>
+        <div><span>{{ user.name }} | {{ user.role | title }}</span> <a href="/logout" class="logout">Logout</a></div>
     </div>
 
     <div class="container">
         <div class="user-info">
-            <strong>Name:</strong> {{ user.name }} |
-            <strong>Role:</strong> {{ user.role | title }} |
-            <strong>Class:</strong> {{ user.class_division }} |
-            <strong>Roll No:</strong> {{ user.roll_no or 'N/A' }}
+            <strong>Name:</strong> {{ user.name }} | <strong>Role:</strong> {{ user.role | title }} |
+            <strong>Class:</strong> {{ user.class_division }} | <strong>Roll No:</strong> {{ user.roll_no or 'N/A' }}
         </div>
 
         {% if is_admin %}
         <div class="admin-panel">
             <h3>Admin Controls</h3>
             <a href="{{ url_for('bulk_upload') }}">Bulk Upload Students</a>
-            <!-- You can add "Manage Students" link here later -->
         </div>
         {% endif %}
 
@@ -59,116 +52,152 @@
             <button class="tab-btn active" onclick="openTab('fee_payment')">Fee Payment</button>
             <button class="tab-btn" onclick="openTab('attendance')">Attendance</button>
             <button class="tab-btn" onclick="openTab('academic_progress')">Academic Progress</button>
-            <button class="tab-btn" onclick="openTab('accolades')">Accolades/Certificates</button>
-            <button class="tab-btn" onclick="openTab('applications')">Applications</button>
-            <button class="tab-btn" onclick="openTab('participation')">Participation/Co-Curricular</button>
-            <button class="tab-btn" onclick="openTab('schedules')">Schedules/Time Tables</button>
-            <button class="tab-btn" onclick="openTab('view_calendar')">View of Events</button>
-            <button class="tab-btn" onclick="openTab('downloads')">View/Downloads</button>
+            <button class="tab-btn" onclick="openTab('accolades')">Accolades/Certificate</button>
+            <button class="tab-btn" onclick="openTab('applications')">Applications / Apply Online</button>
+            <button class="tab-btn" onclick="openTab('participation')">Participation in Co/Extra</button>
+            <button class="tab-btn" onclick="openTab('schedules')">Schedules and Time Tables</button>
+            <button class="tab-btn" onclick="openTab('view_calendar')">View Calendar of Events</button>
+            <button class="tab-btn" onclick="openTab('downloads')">View / Downloads</button>
             <button class="tab-btn" onclick="openTab('discipline')">Discipline</button>
             <button class="tab-btn" onclick="openTab('parents_meetings')">Parents Meetings</button>
             <button class="tab-btn" onclick="openTab('counselling')">Counselling</button>
         </div>
 
-       <!-- Fee Payment Tab -->
-<div id="fee_payment" class="tab-content active">
-    <h3>Fee Payment</h3>
-    {% if is_admin %}
-    <div class="fee-structure">
-        <div class="fee-row">
-            <div class="fee-col">
-                <label>Academic Year:</label>
-                <select id="fee_year" onchange="loadFeeYear()">
-                    <option value="2025-26">2025-26</option>
-                    <option value="2024-25">2024-25</option>
-                    <option value="2023-24">2023-24</option>
-                </select>
+        <!-- FEE TAB -->
+        <div id="fee_payment" class="tab-content active">
+            <h3>Fee Payment</h3>
+            {% if is_admin %}
+            <div class="fee-structure">
+                <div class="field-row"><label>Academic Year:</label>
+                    <select id="fee_year" onchange="loadFeeYear()">
+                        <option>2025-26</option><option>2024-25</option><option>2023-24</option>
+                    </select>
+                </div>
+                <table>
+                    <tr><th>Fee Type</th><th>Total Fee</th><th>Paid</th><th>Balance</th></tr>
+                    <tr><td>Arrears</td><td><input type="number" id="arrears" value="0" oninput="calcBalance()"></td><td>-</td><td id="arrears_bal" class="amount">₹0.00</td></tr>
+                    <tr><td>Term - 1</td><td><input type="number" id="term1_fee" value="0" oninput="calcBalance()"></td><td><input type="number" id="term1_paid" value="0" oninput="calcBalance()"></td><td id="term1_bal" class="amount">₹0.00</td></tr>
+                    <tr><td>Term - 2</td><td><input type="number" id="term2_fee" value="0" oninput="calcBalance()"></td><td><input type="number" id="term2_paid" value="0" oninput="calcBalance()"></td><td id="term2_bal" class="amount">₹0.00</td></tr>
+                    <tr><td>Programme Fees</td><td><input type="number" id="programme_fee" value="0" oninput="calcBalance()"></td><td><input type="number" id="programme_paid" value="0" oninput="calcBalance()"></td><td id="programme_bal" class="amount">₹0.00</td></tr>
+                    <tr style="background:#ecf0f1; font-weight:bold;"><td colspan="3">Total Outstanding:</td><td id="total_outstanding" class="amount">₹0.00</td></tr>
+                </table>
+                <div class="field-row"><label>Mandatory Activity:</label><textarea id="fee_remarks" rows="2"></textarea></div>
             </div>
+            <button class="save-btn" onclick="saveFee()">Save Fee Details</button>
+            {% else %}
+            <div id="student_fee_view">Loading fee details...</div>
+            {% endif %}
         </div>
 
-        <table style="width:100%; border-collapse: collapse; margin: 15px 0;">
-            <tr style="background: #34495e; color: white;">
-                <th style="padding: 10px; text-align: left;">Fee Type</th>
-                <th style="padding: 10px; text-align: right;">Total Fee</th>
-                <th style="padding: 10px; text-align: right;">Paid</th>
-                <th style="padding: 10px; text-align: right;">Balance</th>
-            </tr>
-            <tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">Arrears</td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="arrears" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;">-</td>
-                <td style="padding: 10px; border: 1px solid #ddd;" id="arrears_bal" class="amount">₹0.00</td>
-            </tr>
-            <tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">Term-1 Fee</td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term1_fee" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term1_paid" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;" id="term1_bal" class="amount">₹0.00</td>
-            </tr>
-            <tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">Term-2 Fee</td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term2_fee" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="term2_paid" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;" id="term2_bal" class="amount">₹0.00</td>
-            </tr>
-            <tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">Programme Fee</td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="programme_fee" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;"><input type="number" id="programme_paid" value="0" step="0.01" oninput="calcBalance()"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;" id="programme_bal" class="amount">₹0.00</td>
-            </tr>
-            <tr style="background: #ecf0f1; font-weight: bold;">
-                <td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total Outstanding:</td>
-                <td style="padding: 10px; border: 1px solid #ddd;" id="total_outstanding" class="amount">₹0.00</td>
-            </tr>
-        </table>
-
-        <div class="field-row">
-            <label>Remarks:</label>
-            <textarea id="fee_remarks" rows="2"></textarea>
-        </div>
-    </div>
-    <button class="save-btn" onclick="saveFee()">Save Fee Details</button>
-    {% else %}
-    <div id="student_fee_view">
-        <p>Loading fee details...</p>
-    </div>
-    {% endif %}
-</div>
-
-        <!-- All other tabs: attendance, academic_progress, etc... -->
-        <!-- I kept them same as your file. Only JS changed below -->
-
-        <!-- Attendance Tab -->
+        <!-- ATTENDANCE TAB -->
         <div id="attendance" class="tab-content">
             <h3>Attendance</h3>
             {% if is_admin %}
-            <div class="field-row"><label>Type:</label><select id="attendance_type"><option>Absence Details</option><option>Previous Years Attendance</option><option>Month wise Attendance</option><option>Exam - Attendance</option><option>Trial</option><option>Interdiciplinary Activity Attendance</option></select></div>
-            <div class="field-row"><label>Month:</label><select id="attendance_month"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
-            <div class="field-row"><label>Status:</label><select id="attendance_status"><option>Present</option><option>Absent</option><option>Leave</option></select></div>
+            <div class="field-row"><label>Type:</label><select id="attendance_type"><option>Absence Details</option><option>Previous Years Attendance</option><option>Month wise</option><option>Exam – Attendance</option><option>Total</option><option>Mandatory Activity Attendance</option></select></div>
+            <div class="field-row"><label>Month:</label><select id="attendance_month"><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option><option>January</option><option>February</option></select></div>
             <div class="field-row"><label>Details:</label><textarea id="attendance_text" rows="3"></textarea></div>
             <button class="save-btn" onclick="saveData('attendance')">Save</button>
-            {% else %}
-            <div class="field-row"><label>Details:</label><span>{{ erp_data.attendance or 'Not Updated' }}</span></div>
-            {% endif %}
+            {% else %}<span>{{ erp_data.attendance or 'Not Updated' }}</span>{% endif %}
         </div>
 
-        <!-- Academic Progress Tab -->
+        <!-- ACADEMIC PROGRESS -->
         <div id="academic_progress" class="tab-content">
             <h3>Academic Progress</h3>
             {% if is_admin %}
-            <div class="field-row"><label>Test/Exam:</label><select id="academic_progress_test"><option>Entrance / Diagnostic Test</option><option>MT 1</option><option>MT 2</option><option>MT 3</option><option>MT 4</option><option>MT 5</option><option>MT 6</option><option>Mid-Term / SA 1</option><option>Annual Exams</option><option>Board Exams</option><option>JEE / NEET</option></select></div>
-            <div class="field-row"><label>Grade:</label><select id="academic_progress_grade"><option>A+</option><option>A</option><option>B+</option><option>B</option><option>C</option><option>D</option><option>F</option></select></div>
-            <div class="field-row"><label>Marks/Remarks:</label><textarea id="academic_progress_text" rows="3"></textarea></div>
+            <div class="field-row"><label>Test/Exam:</label><select id="academic_progress_test"><option>Entrance / Diagnostic Test</option><option>MT-1</option><option>MT-2</option><option>MT-3</option><option>MT-4</option><option>MT-5</option><option>MT-6</option><option>Mid-Term / SA-1</option><option>Annual Exam</option><option>Board Exam</option><option>JEE / NEET</option><option>View Graph</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="academic_progress_text" rows="3"></textarea></div>
             <button class="save-btn" onclick="saveData('academic_progress')">Save</button>
-            {% else %}
-            <div class="field-row"><label>Details:</label><span>{{ erp_data.academic_progress or 'Not Updated' }}</span></div>
-            {% endif %}
+            {% else %}<span>{{ erp_data.academic_progress or 'Not Updated' }}</span>{% endif %}
         </div>
 
-        <!-- Add rest of your tabs here exactly as you had them... -->
-        <!-- accolades, applications, participation, schedules, view_calendar, downloads, discipline, parents_meetings, counselling -->
-        <!-- For brevity I am not repeating all 10 tabs. Copy them from your file above -->
+        <!-- ACCOLADES -->
+        <div id="accolades" class="tab-content">
+            <h3>Accolades/Certificate</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Level:</label><select id="accolades_level"><option>School Level</option><option>Inter-school</option><option>State</option><option>National</option><option>International</option><option>Sports & Yoga</option><option>Literary Art, and Cultural</option><option>Clubs & Leadership</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="accolades_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('accolades')">Save</button>
+            {% else %}<span>{{ erp_data.accolades or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- APPLICATIONS -->
+        <div id="applications" class="tab-content">
+            <h3>Applications / Apply Online</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Application:</label><select id="applications_type"><option>Gavel Club</option><option>Talent Hunt</option><option>Sports</option><option>Photography</option><option>Chess</option><option>Yoga</option><option>Dance / Music</option><option>Literary and / Art and Dramatics</option><option>Social Work</option><option>Quiz</option><option>Exhibition</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="applications_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('applications')">Save</button>
+            {% else %}<span>{{ erp_data.applications or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- PARTICIPATION -->
+        <div id="participation" class="tab-content">
+            <h3>Participation in Co/Extra</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Activity:</label><select id="participation_activity"><option>Talent Hunt</option><option>Sports</option><option>Gavel Club</option><option>Photograph</option><option>Leadership and Communication</option><option>Chess</option><option>Yoga</option><option>Dance / Music</option><option>Literary and / Art and Cultural</option><option>Social Work</option><option>Quiz</option><option>Exhibition</option><option>NCC</option><option>Scouts and Guides</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="participation_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('participation')">Save</button>
+            {% else %}<span>{{ erp_data.participation or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- SCHEDULES -->
+        <div id="schedules" class="tab-content">
+            <h3>Schedules and Time Tables</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Type:</label><select id="schedules_type"><option>Syllabus</option><option>Exam Schedule</option><option>TTA Activity Schedule</option><option>Sports Schedule</option><option>Pratibha Karanji</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="schedules_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('schedules')">Save</button>
+            {% else %}<span>{{ erp_data.schedules or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- VIEW CALENDAR -->
+        <div id="view_calendar" class="tab-content">
+            <h3>View Calendar of Events</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Month:</label><select id="view_calendar_month"><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option><option>January</option><option>February</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="view_calendar_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('view_calendar')">Save</button>
+            {% else %}<span>{{ erp_data.view_calendar or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- DOWNLOADS -->
+        <div id="downloads" class="tab-content">
+            <h3>View / Downloads</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Document:</label><select id="downloads_type"><option>Monthly Plan</option><option>Year Plan</option><option>Exam Schedules</option><option>Activity Schedule</option><option>Report Card</option><option>Results</option><option>Admission Doc Submission status</option><option>Payment Receipts</option></select></div>
+            <div class="field-row"><label>Link/Details:</label><textarea id="downloads_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('downloads')">Save</button>
+            {% else %}<span>{{ erp_data.downloads or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- DISCIPLINE -->
+        <div id="discipline" class="tab-content">
+            <h3>Discipline</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Remarks:</label><textarea id="discipline_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('discipline')">Save</button>
+            {% else %}<span>{{ erp_data.discipline or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- PARENTS MEETINGS -->
+        <div id="parents_meetings" class="tab-content">
+            <h3>Parents Meetings</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Date/Time:</label><input type="text" id="parents_meetings_datetime" placeholder="DD-MM-YYYY HH:MM"></div>
+            <div class="field-row"><label>Details:</label><textarea id="parents_meetings_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('parents_meetings')">Save</button>
+            {% else %}<span>{{ erp_data.parents_meetings or 'Not Updated' }}</span>{% endif %}
+        </div>
+
+        <!-- COUNSELLING -->
+        <div id="counselling" class="tab-content">
+            <h3>Counselling</h3>
+            {% if is_admin %}
+            <div class="field-row"><label>Type:</label><select id="counselling_type"><option>Career</option><option>Personal</option><option>Academic</option></select></div>
+            <div class="field-row"><label>Details:</label><textarea id="counselling_text" rows="3"></textarea></div>
+            <button class="save-btn" onclick="saveData('counselling')">Save</button>
+            {% else %}<span>{{ erp_data.counselling or 'Not Updated' }}</span>{% endif %}
+        </div>
 
     </div>
 
@@ -181,67 +210,43 @@
         }
 
         async function saveData(field) {
-            {% if is_admin and editing_student_id %}
-            const studentId = {{ editing_student_id }};
-            {% else %}
-            alert('Only admin can update data');
-            return;
-            {% endif %}
+            {% if is_admin %}
+            const studentId = {{ user.id }};
+            {% else %} alert('Only admin can update'); return; {% endif %}
 
             let data = {};
-            if(field === 'attendance') {
-                data[field] = `${document.getElementById('attendance_type').value} | ${document.getElementById('attendance_month').value} | ${document.getElementById('attendance_status').value} | ${document.getElementById('attendance_text').value}`;
-            } else if(field === 'academic_progress') {
-                data[field] = `${document.getElementById('academic_progress_test').value} | Grade: ${document.getElementById('academic_progress_grade').value} | ${document.getElementById('academic_progress_text').value}`;
-            } else if(field === 'accolades') {
-                data[field] = `${document.getElementById('accolades_level').value} | ${document.getElementById('accolades_text').value}`;
-            } else if(field === 'applications') {
-                data[field] = `${document.getElementById('applications_type').value} | Status: ${document.getElementById('applications_status').value} | ${document.getElementById('applications_text').value}`;
-            } else if(field === 'participation') {
-                data[field] = `${document.getElementById('participation_activity').value} | ${document.getElementById('participation_text').value}`;
-            } else if(field === 'schedules') {
-                data[field] = `${document.getElementById('schedules_type').value} | ${document.getElementById('schedules_text').value}`;
-            } else if(field === 'view_calendar') {
-                data[field] = `${document.getElementById('view_calendar_month').value} | ${document.getElementById('view_calendar_type').value} | ${document.getElementById('view_calendar_text').value}`;
-            } else if(field === 'downloads') {
-                data[field] = `${document.getElementById('downloads_type').value} | ${document.getElementById('downloads_text').value}`;
-            } else if(field === 'discipline') {
-                data[field] = `Remarks: ${document.getElementById('discipline_remarks').value} | ${document.getElementById('discipline_text').value}`;
-            } else if(field === 'parents_meetings') {
-                data[field] = `Status: ${document.getElementById('parents_meetings_status').value} | Date: ${document.getElementById('parents_meetings_datetime').value} | ${document.getElementById('parents_meetings_text').value}`;
-            } else if(field === 'counselling') {
-                data[field] = `Type: ${document.getElementById('counselling_type').value} | Status: ${document.getElementById('counselling_status').value} | ${document.getElementById('counselling_text').value}`;
-            }
+            data[field] = document.getElementById(field + '_text')? document.getElementById(field + '_text').value : '';
+            if(field === 'attendance') data[field] = `${document.getElementById('attendance_type').value} | ${document.getElementById('attendance_month').value} | ${data[field]}`;
+            if(field === 'academic_progress') data[field] = `${document.getElementById('academic_progress_test').value} | ${data[field]}`;
+            if(field === 'accolades') data[field] = `${document.getElementById('accolades_level').value} | ${data[field]}`;
+            if(field === 'applications') data[field] = `${document.getElementById('applications_type').value} | ${data[field]}`;
+            if(field === 'participation') data[field] = `${document.getElementById('participation_activity').value} | ${data[field]}`;
+            if(field === 'schedules') data[field] = `${document.getElementById('schedules_type').value} | ${data[field]}`;
+            if(field === 'view_calendar') data[field] = `${document.getElementById('view_calendar_month').value} | ${data[field]}`;
+            if(field === 'downloads') data[field] = `${document.getElementById('downloads_type').value} | ${data[field]}`;
+            if(field === 'parents_meetings') data[field] = `${document.getElementById('parents_meetings_datetime').value} | ${data[field]}`;
+            if(field === 'counselling') data[field] = `${document.getElementById('counselling_type').value} | ${data[field]}`;
 
-            const res = await fetch(`/admin/update_student/${studentId}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            if(res.ok) alert('Data saved successfully!');
-            else alert('Error saving data');
+            const res = await fetch(`/admin/update_student/${studentId}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+            alert(res.ok? 'Data saved!' : 'Error saving');
         }
 
         // FEE JS
         let currentFeeData = {};
-        function calcBalance() { /* same as your code */
-            const arrears = parseFloat(document.getElementById('arrears').value) || 0;
-            const t1_fee = parseFloat(document.getElementById('term1_fee').value) || 0;
-            const t1_paid = parseFloat(document.getElementById('term1_paid').value) || 0;
-            const t2_fee = parseFloat(document.getElementById('term2_fee').value) || 0;
-            const t2_paid = parseFloat(document.getElementById('term2_paid').value) || 0;
-            const prog_fee = parseFloat(document.getElementById('programme_fee').value) || 0;
-            const prog_paid = parseFloat(document.getElementById('programme_paid').value) || 0;
-            const total = arrears + (t1_fee - t1_paid) + (t2_fee - t2_paid) + (prog_fee - prog_paid);
-            document.getElementById('arrears_bal').textContent = `₹${arrears.toFixed(2)}`;
-            document.getElementById('term1_bal').textContent = `₹${(t1_fee - t1_paid).toFixed(2)}`;
-            document.getElementById('term2_bal').textContent = `₹${(t2_fee - t2_paid).toFixed(2)}`;
-            document.getElementById('programme_bal').textContent = `₹${(prog_fee - prog_paid).toFixed(2)}`;
-            document.getElementById('total_outstanding').textContent = `₹${total.toFixed(2)}`;
+        function calcBalance() {
+            const a = parseFloat(document.getElementById('arrears').value)||0;
+            const t1 = (parseFloat(document.getElementById('term1_fee').value)||0) - (parseFloat(document.getElementById('term1_paid').value)||0);
+            const t2 = (parseFloat(document.getElementById('term2_fee').value)||0) - (parseFloat(document.getElementById('term2_paid').value)||0);
+            const p = (parseFloat(document.getElementById('programme_fee').value)||0) - (parseFloat(document.getElementById('programme_paid').value)||0);
+            document.getElementById('arrears_bal').textContent = `₹${a.toFixed(2)}`;
+            document.getElementById('term1_bal').textContent = `₹${t1.toFixed(2)}`;
+            document.getElementById('term2_bal').textContent = `₹${t2.toFixed(2)}`;
+            document.getElementById('programme_bal').textContent = `₹${p.toFixed(2)}`;
+            document.getElementById('total_outstanding').textContent = `₹${(a+t1+t2+p).toFixed(2)}`;
         }
-        async function saveFee() { /* same as your code */ }
-        async function loadFeeYear() { /* same as your code */ }
-        function displayStudentFees() { /* same as your code */ }
+        async function saveFee() { /* same as before */ }
+        async function loadFeeYear() { /* same as before */ }
+        function displayStudentFees() { /* same as before */ }
         window.addEventListener('DOMContentLoaded', loadFeeYear);
     </script>
 </body>

@@ -241,7 +241,17 @@ def bulk_upload():
             return render_template('bulk_upload.html', error=f'Error: {str(e)}')
     
     return render_template('bulk_upload.html')
-
+@app.route('/admin/update_student/<int:student_id>', methods=['POST'])
+def update_student(student_id):
+    if session.get('role')!= 'admin':
+        return {"status": "error"}, 403
+    data = request.json
+    conn = get_db_connection()
+    for key, value in data.items():
+        conn.execute(f'UPDATE student_data SET {key} =? WHERE user_id =?', (value, student_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
 
 
 
