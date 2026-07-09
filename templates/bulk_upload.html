@@ -1,60 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Bulk Upload - APS ERP</title>
-    <style>
-        body { font-family: Arial; background: #f0f2f5; padding: 20px; }
-       .container { background: white; padding: 30px; border-radius: 8px; max-width: 700px; margin: auto; }
-        h2 { color: #1a73e8; }
-        button { padding: 12px 20px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .download-btn { background: #27ae60; margin-bottom: 15px; }
-       .error { color: red; } .success { color: green; }
-       .info { background: #e8f0fe; padding: 15px; border-radius: 4px; margin: 15px 0; }
-        pre { background: #f5f5f5; padding: 10px; }
-    </style>
-</head>
+<head><title>Bulk Upload</title></head>
 <body>
-    <div class="container">
-        <h2>Bulk Upload Students</h2>
-        <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
-        
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-        {% if success %}<p class="success">{{ success }}</p>{% endif %}
-        
-        <a href="/admin/download_sample_csv"><button class="download-btn">Download Sample CSV</button></a>
-        
-        <div class="info">
-            <b>CSV Headers Required:</b>
-            <pre>username,password,role,name,class_division,roll_no</pre>
-            <b>Example:</b>
-            <pre>STU001,pass123,student,Rahul Sharma,10-A,1</pre>
-        </div>
-        <!-- Status Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <div class="messages">
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
+<h2>Bulk Upload Users - 5 Columns</h2>
+<a href="{{ url_for('download_sample_csv') }}">Download Sample CSV</a>
 <form method="POST" enctype="multipart/form-data">
     <input type="file" name="file" accept=".csv" required>
     <button type="submit">Upload</button>
 </form>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" required><br><br>
-            <button type="submit">Upload Students</button>
-        </form>
-        
-        {% if errors %}
-        <h3>Errors:</h3>
-        <ul>{% for err in errors %}<li class="error">{{ err }}</li>{% endfor %}</ul>
-        {% endif %}
-    </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <p style="color: {% if category=='error' %}red{% else %}green{% endif %}">{{ message }}</p>
+  {% endfor %}
+{% endwith %}
+
+<a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
 </body>
 </html>
