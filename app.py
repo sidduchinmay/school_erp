@@ -205,30 +205,27 @@ def get_fee_details(student_id):
 
 
 @app.route('/bulk_upload', methods=['GET', 'POST'])
-@admin_required
+@login_required
+@role_required('admin')
 def bulk_upload():
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file uploaded', 'danger')
-            return redirect(url_for('bulk_upload'))
-        
         file = request.files['file']
-        if file.filename == '':
-            flash('No file selected', 'danger')
-            return redirect(url_for('bulk_upload'))
-
-        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-        csv_input = csv.reader(stream, skipinitialspace=True) 
-        next(csv_input) # skip header
+        if not file:
+            flash('No file selected', 'error')
+            return redirect(request.url)
         
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_input = csv.reader(stream)
+        next(csv_input) # skip header
+
         conn = get_db()
         success = 0
         errors = []
-        
+
         for i, row in enumerate(csv_input, start=2):
             if not any(cell.strip() for cell in row):
                 continue
-        
+                
             row = [x.strip() for x in row]
             while row and row[-1] == '':
                 row.pop()
@@ -236,14 +233,14 @@ def bulk_upload():
             if len(row) != 6:
                 errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
                 continue
-                
+                    
             username, password, role, name, class_division, roll_no = row
             try:
                 hashed_pw = generate_password_hash(password)
                 conn.execute('''INSERT INTO users 
-                (username, password, role, name, class_division, roll_no) 
-                VALUES (?, ?, ?, ?)''',
-                (username, hashed_pw, role, name, class_division, roll_no))
+                    (username, password, role, name, class_division, roll_no) 
+                    VALUES (?, ?, ?, ?, ?, ?)''',
+                    (username, hashed_pw, role, name, class_division, roll_no))
                 success += 1
             except sqlite3.IntegrityError:
                 errors.append(f"Row {i}: Username '{username}' already exists")
@@ -252,15 +249,12 @@ def bulk_upload():
         
         conn.commit()
         conn.close()
-        
-        # Show status on screen
+
         if success > 0:
             flash(f'✅ Success: {success} users added', 'success')
-        if errors:
-            flash(f'❌ {len(errors)} rows failed. See details below.', 'danger')
-            for e in errors[:20]: # show max 20 errors
-                flash(e, 'warning')
-        
+        for error in errors:
+            flash(f'❌ {error}', 'error')
+            
         return redirect(url_for('bulk_upload'))
 
     return render_template('bulk_upload.html')
