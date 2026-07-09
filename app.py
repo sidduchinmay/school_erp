@@ -3,7 +3,7 @@ import csv
 import io
 import sqlite3
 import traceback
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 
@@ -132,7 +132,7 @@ def login():
                                (username, role)).fetchone()
             conn.close()
             
-            if user and user['password'] == password: # change to check_password_hash later
+            if user and check_password_hash(user['password'], password):
                 session['user_id'] = user['id']
                 session['role'] = user['role']
                 session['name'] = user['name']
@@ -313,6 +313,18 @@ TCH001,teach123,teacher,Anita Rao,10-A,
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.route('/reset_admin')
+def reset_admin():
+    conn = get_db_connection()
+    conn.execute("DELETE FROM users WHERE username='admin'")
+    hashed_pw = generate_password_hash('admin123')
+    conn.execute('INSERT INTO users (username, password, role, name, class_division, roll_no) VALUES (?, ?, ?)',
+                 ('admin', hashed_pw, 'admin', 'Administrator', 'N/A', ''))
+    conn.commit()
+    conn.close()
+    return "Admin reset. Login with username: admin, password: admin123, role: admin"
+
 
 if __name__ == '__main__':
     app.run()
