@@ -226,23 +226,32 @@ def bulk_upload():
         errors = []
         
         for i, row in enumerate(csv_input, start=2):
-            row = [x.strip() for x in row]
-            if len(row) != 6:
-                errors.append(f"Row {i}: Expected 6 columns, got {len(row)}")
-                continue
+    # Skip completely empty rows
+    if not any(row):
+        continue
+        
+    row = [x.strip() for x in row]
+    
+    # Remove trailing empty columns
+    while row and row[-1] == '':
+        row.pop()
+
+    if len(row) != 6:
+        errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
+        continue
                 
-            username, password, role, name, class_division, roll_no = row
-            try:
-                hashed_pw = generate_password_hash(password)
-                conn.execute('''INSERT INTO users 
-                    (username, password, role, name, class_division, roll_no) 
-                    VALUES (?, ?, ?, ?, ?)''',
-                    (username, hashed_pw, role, name, class_division, roll_no))
-                success += 1
-            except sqlite3.IntegrityError:
-                errors.append(f"Row {i}: Username '{username}' already exists")
-            except Exception as e:
-                errors.append(f"Row {i}: {str(e)}")
+    username, password, role, name, class_division, roll_no = row
+    try:
+        hashed_pw = generate_password_hash(password)
+        conn.execute('''INSERT INTO users 
+            (username, password, role, name, class_division, roll_no) 
+            VALUES (?, ?, ?)''',
+            (username, hashed_pw, role, name, class_division, roll_no))
+        success += 1
+    except sqlite3.IntegrityError:
+        errors.append(f"Row {i}: Username '{username}' already exists")
+    except Exception as e:
+        errors.append(f"Row {i}: {str(e)}")
         
         conn.commit()
         conn.close()
