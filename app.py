@@ -189,66 +189,56 @@ def get_fee_details(student_id):
         return {"status": "error", "message": str(e)}, 500
 
 
-@app.route('/admin/bulk_upload', methods=['GET', 'POST'])
+@app.route('/bulk_upload', methods=['POST'])
+@admin_required
 def bulk_upload():
-    if session.get('role') != 'admin':
-        return "Unauthorized", 403
+    if 'file' not in request.files:
+        flash('No file uploaded', 'danger')
+        return redirect(url_for('bulk_upload_page'))
     
-    if request.method == 'POST':
-        file = request.files['file']
-        if file.filename == '':
-            return render_template('bulk_upload.html', error='No file selected')
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected', 'danger')
+        return redirect(url_for('bulk_upload_page'))
+
+    stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+    # THIS LINE IS THE FIX: skipinitialspace removes spaces after commas
+    csv_input = csv.reader(stream, skipinitialspace=True) 
+    
+    next(csv_input) # skip header
+    
+    conn = get_db()
+    success = 0
+    errors = []
+    
+    for i, row in enumerate(csv_input, start=2):
+        row = [x.strip() for x in row]
+        
+        if len(row) != 6:
+            errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
+            continue
+            
+        username, password, role, name, class_division, roll_no = row
         
         try:
-            content = file.stream.read().decode("UTF-8-sig")
-            lines = [line for line in content.splitlines() if line.strip()]
-            
-            sample = '\n'.join(lines[:5])
-            dialect = csv.Sniffer().sniff(sample, delimiters=',;')
-            csv_input = csv.reader(lines, dialect)
-            
-            headers = next(csv_input)
-            headers = [h.strip() for h in headers]
-            expected = ['username','password','role','name','class_division','roll_no']
-            
-            if headers != expected:
-                return render_template('bulk_upload.html', 
-                    error=f'Invalid headers. Found: {headers}. Expected: {expected}')
-            
-            conn = get_db_connection()
-            added = 0
-            errors = []
-            
-            for i, row in enumerate(csv_input, start=2):
-                row = [x.strip() for x in row]
-                if all(x == '' for x in row): continue
-                    
-                if len(row) != 6:
-                    errors.append(f"Row {i}: Found {len(row)} columns. Data: {row}")
-                    continue
-                
-                username, password, role, name, class_division, roll_no = row
-                
-                try:
-                    conn.execute('''INSERT INTO users 
-                        (username, password, role, name, class_division, roll_no) 
-                        VALUES (?, ?, ?)''',
-                        (username, password, role, name, class_division, roll_no))
-                    added += 1
-                except sqlite3.IntegrityError:
-                    errors.append(f"Row {i}: Username '{username}' already exists")
-            
-            conn.commit()
-            conn.close()
-            
-            msg = f'{added} users added successfully'
-            if errors: return render_template('bulk_upload.html', success=msg, errors=errors)
-            else: return render_template('bulk_upload.html', success=msg)
-                                   
-        except Exception as e:
-            return render_template('bulk_upload.html', error=f'Error: {str(e)}')
+            hashed_pw = generate_password_hash(password)
+            conn.execute('''INSERT INTO users 
+                (username, password, role, name, class_division, roll_no) 
+                VALUES (?, ?, ?)''',
+                (username, hashed_pw, role, name, class_division, roll_no))
+            success += 1
+        except sqlite3.IntegrityError:
+            errors.append(f"Row {i}: Username '{username}' already exists")
     
-    return render_template('bulk_upload.html')
+    conn.commit()
+    conn.close()
+    
+    if errors:
+        for e in errors[:10]: # show max 10 errors
+            flash(e, 'danger')
+    
+    flash(f'Bulk Upload Complete: {success} users added', 'success')
+    return redirect(url_for('bulk_upload_page'))
 @app.route('/admin/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
     if session.get('role')!= 'admin':
