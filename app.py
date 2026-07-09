@@ -204,7 +204,7 @@ def get_fee_details(student_id):
         return {"status": "error", "message": str(e)}, 500
 
 
-@app.route('/bulk_upload', methods=['GET', 'POST'])  # <-- IMPORTANT: allow both
+@app.route('/bulk_upload', methods=['GET', 'POST'])
 @admin_required
 def bulk_upload():
     if request.method == 'POST':
@@ -236,24 +236,27 @@ def bulk_upload():
                 hashed_pw = generate_password_hash(password)
                 conn.execute('''INSERT INTO users 
                     (username, password, role, name, class_division, roll_no) 
-        VALUES (?, ?, ?, ?, ?)''',
-                (username, hashed_pw, role, name, class_division, roll_no))
+                    VALUES (?, ?, ?, ?, ?)''',
+                    (username, hashed_pw, role, name, class_division, roll_no))
                 success += 1
             except sqlite3.IntegrityError:
                 errors.append(f"Row {i}: Username '{username}' already exists")
             except Exception as e:
-                errors.append(f"Row {i}: {str(e)}") # <-- This will help us see next error
+                errors.append(f"Row {i}: {str(e)}")
         
         conn.commit()
         conn.close()
         
+        # Show status on screen
+        if success > 0:
+            flash(f'✅ Success: {success} users added', 'success')
         if errors:
-            for e in errors[:10]:
-                flash(e, 'danger')
-        flash(f'Bulk Upload Complete: {success} users added', 'success')
+            flash(f'❌ {len(errors)} rows failed. See details below.', 'danger')
+            for e in errors[:20]: # show max 20 errors
+                flash(e, 'warning')
+        
         return redirect(url_for('bulk_upload'))
 
-    # If GET request, just show the upload page
     return render_template('bulk_upload.html')
 @app.route('/admin/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
