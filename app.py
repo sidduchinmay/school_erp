@@ -241,10 +241,10 @@ def add_user():
         roll_no = data.get('roll_no', '')
         
         hashed_pw = generate_password_hash(password)
-        conn = get_db_connection()
-        conn.execute('''INSERT INTO users (username, password, role, name, class_division, roll_no) 
-                        VALUES (?, ?, ?, ?, ?)''',
-                     (username, hashed_pw, role, name, class_division, roll_no))
+        conn.execute('''INSERT INTO users 
+            (username, password, role, name, class_division, roll_no) 
+            VALUES (?, ?, ?, ?, ?, ?)''',
+            (username, hashed_pw, role, name, class_division, roll_no))
         conn.commit()
         conn.close()
         return {"status": "success"}
