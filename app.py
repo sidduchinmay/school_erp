@@ -124,8 +124,7 @@ def add_user():
         conn = get_db_connection()
         conn.execute('''INSERT INTO users (username, password, role, name, class_division, roll_no) 
                         VALUES (?, ?, ?, ?, ?, ?)''',
-                     (data['username'], data['password'], data['role'], 
-                      data['name'], data['class_division'], data.get('roll_no')))
+                     (username, password, role, name, class_division, roll_no))
         conn.commit()
         conn.close()
         return {"status": "success"}
