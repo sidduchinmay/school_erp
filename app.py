@@ -9,11 +9,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
-DATABASE = 'database.db'  # use only 1 DB file
+DATABASE = 'database.db'  
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row  # so we can use dict access
+    conn.row_factory = sqlite3.Row
     return conn
 
 def login_required(f):
@@ -36,7 +36,7 @@ def role_required(role):
         return decorated_function
     return decorator
 
-def admin_required(f): # keeping this for your other routes
+def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session or session.get('role') != 'admin':
@@ -54,9 +54,8 @@ def init_db():
             password TEXT NOT NULL,
             role TEXT NOT NULL,
             name TEXT NOT NULL,
-            class_division TEXT NOT NULL,
-            roll_no TEXT
-        )''')
+            class_division TEXT NOT NULL
+        )''') # REMOVED roll_no
         
         conn.execute('''CREATE TABLE IF NOT EXISTS student_data (
             user_id INTEGER PRIMARY KEY,
@@ -85,8 +84,8 @@ def init_db():
         admin = conn.execute('SELECT * FROM users WHERE username = "admin"').fetchone()
         if not admin:
             hashed_pw = generate_password_hash('admin123')
-            conn.execute('INSERT INTO users (username, password, role, name, class_division, roll_no) VALUES (?, ?, ?, ?, ?, ?)',
-                         ('admin', hashed_pw, 'admin', 'Administrator', 'N/A', ''))
+            conn.execute('INSERT INTO users (username, password, role, name, class_division) VALUES (?, ?, ?)',
+                         ('admin', hashed_pw, 'admin', 'Administrator', 'N/A'))
         conn.commit()
         conn.close()
         print("Database initialized successfully")
@@ -107,14 +106,6 @@ def get_student_data(user_id):
         return {}
 
 init_db()
-
-@app.errorhandler(500)
-def internal_error(error):
-    return f"Server Error: {str(error)}", 500
-
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -196,20 +187,18 @@ def bulk_upload():
                 continue
                 
             row = [x.strip() for x in row]
-            while row and row[-1] == '':
-                row.pop()
 
-            if len(row) != 6:
-                errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
+            if len(row) != 5: # CHANGED TO 5
+                errors.append(f"Row {i}: Expected 5 columns, got {len(row)}. Data: {row}")
                 continue
                     
-            username, password, role, name, class_division, roll_no = row
+            username, password, role, name, class_division = row # REMOVED roll_no
             try:
                 hashed_pw = generate_password_hash(password)
                 conn.execute('''INSERT INTO users 
-                    (username, password, role, name, class_division, roll_no) 
-                    VALUES (?, ?, ?)''',
-                    (username, hashed_pw, role, name, class_division, roll_no))
+                    (username, password, role, name, class_division) 
+                    VALUES (?, ?, ?)''', # 5 ? 
+                    (username, hashed_pw, role, name, class_division))
                 success += 1
             except sqlite3.IntegrityError:
                 errors.append(f"Row {i}: Username '{username}' already exists")
@@ -238,13 +227,12 @@ def add_user():
         role = data['role']
         name = data['name']
         class_division = data['class_division']
-        roll_no = data.get('roll_no', '')
         
         hashed_pw = generate_password_hash(password)
-        conn.execute('''INSERT INTO users 
-            (username, password, role, name, class_division, roll_no) 
-            VALUES (?, ?, ?, ?, ?, ?)''',
-            (username, hashed_pw, role, name, class_division, roll_no))
+        conn = get_db_connection()
+        conn.execute('''INSERT INTO users (username, password, role, name, class_division) 
+                        VALUES (?, ?, ?, ?, ?)''', # 5 ?
+                     (username, hashed_pw, role, name, class_division))
         conn.commit()
         conn.close()
         return {"status": "success"}
@@ -253,78 +241,10 @@ def add_user():
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-@app.route('/admin/update_fee/<int:student_id>', methods=['POST'])
-@admin_required
-def update_fee(student_id):
-    try:
-        data = request.json
-        conn = get_db_connection()
-        conn.execute('DELETE FROM fee_structure WHERE user_id=? AND academic_year=?', 
-                     (student_id, data['academic_year']))
-        conn.execute('''INSERT INTO fee_structure 
-            (user_id, academic_year, arrears, term1_fee, term1_paid, term2_fee, term2_paid, programme_fee, programme_paid, remarks) 
-            VALUES (?, ?, ?)''',
-            (student_id, data['academic_year'], data.get('arrears',0), data.get('term1_fee',0), data.get('term1_paid',0), 
-             data.get('term2_fee',0), data.get('term2_paid',0), data.get('programme_fee',0), data.get('programme_paid',0), data.get('remarks','')))
-        conn.commit()
-        conn.close()
-        return {"status": "success"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
-
-@app.route('/get_fee_details/<int:student_id>')
-@login_required
-def get_fee_details(student_id):
-    try:
-        conn = get_db_connection()
-        fees = conn.execute('SELECT * FROM fee_structure WHERE user_id=? ORDER BY academic_year DESC', 
-                           (student_id,)).fetchall()
-        conn.close()
-        return {"fees": [dict(row) for row in fees]}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
-
-@app.route('/admin/update_student/<int:student_id>', methods=['POST'])
-@admin_required
-def update_student(student_id):
-    data = request.json
-    conn = get_db_connection()
-    for key, value in data.items():
-        conn.execute(f'UPDATE student_data SET {key} =? WHERE user_id =?', (value, student_id))
-    conn.commit()
-    conn.close()
-    return {"status": "success"}
-
-@app.route('/admin/download_sample_csv')
-@admin_required
-def download_sample_csv():
-    csv_data = """username,password,role,name,class_division,roll_no
-STU001,pass123,student,Rahul Sharma,10-A,1
-STU002,pass123,student,Priya Singh,10-A,2
-TCH001,teach123,teacher,Anita Rao,10-A,
-"""
-    return Response(
-        csv_data, 
-        mimetype="text/csv", 
-        headers={"Content-disposition": "attachment; filename=sample_students.csv"}
-    )
-
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-@app.route('/reset_admin')
-def reset_admin():
-    conn = get_db_connection()
-    conn.execute("DELETE FROM users WHERE username='admin'")
-    hashed_pw = generate_password_hash('admin123')
-    conn.execute('INSERT INTO users (username, password, role, name, class_division, roll_no) VALUES (?, ?, ?)',
-                 ('admin', hashed_pw, 'admin', 'Administrator', 'N/A', ''))
-    conn.commit()
-    conn.close()
-    return "Admin reset. Login with username: admin, password: admin123, role: admin"
-
 
 if __name__ == '__main__':
     app.run()
