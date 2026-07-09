@@ -3,12 +3,21 @@ import sqlite3
 import os
 import traceback
 import csv
+from functools import wraps
+from flask import session, redirect, url_for, flash
 import io
 
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
-
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'admin':
+            flash('Admin access required', 'danger')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 DATABASE = 'database.db'
 
 def get_db_connection():
