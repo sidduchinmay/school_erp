@@ -198,56 +198,55 @@ def get_fee_details(student_id):
         return {"status": "error", "message": str(e)}, 500
 
 
-@app.route('/bulk_upload', methods=['POST'])
+@app.route('/bulk_upload', methods=['GET', 'POST'])  # <-- IMPORTANT: allow both
 @admin_required
 def bulk_upload():
-    if 'file' not in request.files:
-        flash('No file uploaded', 'danger')
-        return redirect(url_for('bulk_upload_page'))
-    
-    file = request.files['file']
-    if file.filename == '':
-        flash('No file selected', 'danger')
-        return redirect(url_for('bulk_upload_page'))
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file uploaded', 'danger')
+            return redirect(url_for('bulk_upload'))
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected', 'danger')
+            return redirect(url_for('bulk_upload'))
 
-    stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-    # THIS LINE IS THE FIX: skipinitialspace removes spaces after commas
-    csv_input = csv.reader(stream, skipinitialspace=True) 
-    
-    next(csv_input) # skip header
-    
-    conn = get_db()
-    success = 0
-    errors = []
-    
-    for i, row in enumerate(csv_input, start=2):
-        row = [x.strip() for x in row]
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_input = csv.reader(stream, skipinitialspace=True) 
+        next(csv_input) # skip header
         
-        if len(row) != 6:
-            errors.append(f"Row {i}: Expected 6 columns, got {len(row)}. Data: {row}")
-            continue
-            
-        username, password, role, name, class_division, roll_no = row
+        conn = get_db()
+        success = 0
+        errors = []
         
-        try:
-            hashed_pw = generate_password_hash(password)
-            conn.execute('''INSERT INTO users 
-                (username, password, role, name, class_division, roll_no) 
-                VALUES (?, ?, ?)''',
-                (username, hashed_pw, role, name, class_division, roll_no))
-            success += 1
-        except sqlite3.IntegrityError:
-            errors.append(f"Row {i}: Username '{username}' already exists")
-    
-    conn.commit()
-    conn.close()
-    
-    if errors:
-        for e in errors[:10]: # show max 10 errors
-            flash(e, 'danger')
-    
-    flash(f'Bulk Upload Complete: {success} users added', 'success')
-    return redirect(url_for('bulk_upload_page'))
+        for i, row in enumerate(csv_input, start=2):
+            row = [x.strip() for x in row]
+            if len(row) != 6:
+                errors.append(f"Row {i}: Expected 6 columns, got {len(row)}")
+                continue
+                
+            username, password, role, name, class_division, roll_no = row
+            try:
+                hashed_pw = generate_password_hash(password)
+                conn.execute('''INSERT INTO users 
+                    (username, password, role, name, class_division, roll_no) 
+                    VALUES (?, ?, ?)''',
+                    (username, hashed_pw, role, name, class_division, roll_no))
+                success += 1
+            except sqlite3.IntegrityError:
+                errors.append(f"Row {i}: Username '{username}' already exists")
+        
+        conn.commit()
+        conn.close()
+        
+        if errors:
+            for e in errors[:10]:
+                flash(e, 'danger')
+        flash(f'Bulk Upload Complete: {success} users added', 'success')
+        return redirect(url_for('bulk_upload'))
+
+    # If GET request, just show the upload page
+    return render_template('bulk_upload.html')
 @app.route('/admin/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
     if session.get('role')!= 'admin':
