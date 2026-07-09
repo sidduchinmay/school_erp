@@ -10,6 +10,12 @@ import io
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
+DATABASE = 'school.db'  # change this to your db filename
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row  # so we can use dict access
+    return conn
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
