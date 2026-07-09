@@ -226,13 +226,10 @@ def bulk_upload():
         errors = []
         
         for i, row in enumerate(csv_input, start=2):
-    # Skip completely empty rows
             if not any(cell.strip() for cell in row):
                 continue
         
             row = [x.strip() for x in row]
-    
-    # Remove trailing empty columns
             while row and row[-1] == '':
                 row.pop()
 
@@ -245,7 +242,7 @@ def bulk_upload():
                 hashed_pw = generate_password_hash(password)
                 conn.execute('''INSERT INTO users 
                 (username, password, role, name, class_division, roll_no) 
-                VALUES (?, ?, ?, ?, ?)''',
+                VALUES (?, ?, ?, ?)''',
                 (username, hashed_pw, role, name, class_division, roll_no))
                 success += 1
             except sqlite3.IntegrityError:
